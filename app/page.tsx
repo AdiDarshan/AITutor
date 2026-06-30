@@ -6,18 +6,18 @@ export default function LessonPage() {
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <h1 className={styles.course}>Probability 101</h1>
-        <p className={styles.concept}>Conditional Probability</p>
+        <p className={styles.course}>PY101 · Week 1 — Writing your first program</p>
+        <h1 className={styles.concept}>Writing your first program</h1>
       </header>
 
       <section className={styles.flow}>
         <TutorMessage>
-          Welcome! We&apos;ll learn conditional probability one small step at a time.
-          Conditional probability means we ask for a chance after we already know
-          something else happened.
+          Welcome to PY101! We&apos;ll learn Python one small step at a time. A program runs
+          top to bottom, and <code>print()</code> shows text on the screen — the text goes
+          inside the parentheses, in quotes.
         </TutorMessage>
 
-        <QuizCard question="In P(A | B), which event is already known?" />
+        <QuizCard question="Which function displays text on screen in Python?" />
       </section>
     </main>
   );

@@ -50,6 +50,60 @@ Do not ask the model to freely invent the course.
 
 ---
 
+## Course Structure (PY101, Maestro-aligned)
+
+The product follows the Maestro LMS structure. The first build target is the **PY101 —
+Introduction to Python** program.
+
+### Hierarchy
+
+```text
+Program            e.g. "PY101 — Introduction to Python"
+  -> Module        a "Week" with a theme + an ordered list of lessons (e.g. Week 1: "Writing your first program")
+    -> Lesson      a single teachable topic (e.g. "Introduction to variables")
+      -> Chunks    the small step-by-step pieces taught inside a lesson (the old "lesson_chunks")
+```
+
+Terminology change from earlier drafts: the unit formerly called a **concept** is now a
+**lesson**, and a new **module (week)** level sits above it.
+
+### Lesson types
+
+Every lesson has a `type` that changes how the runtime treats it:
+
+```text
+standard         normal teach -> check -> quiz flow
+challenge        harder applied problem(s), still graded
+review           end-of-topic recap + targeted quizzing ("Review: ...")
+weekly_review    end-of-week assessment across the module's lessons
+exam             end-of-program assessment
+retake_review    remediation pass after a failed exam/review
+```
+
+### PY101 reference outline (from Maestro)
+
+```text
+Week 1 — Writing your first program (standard lessons + Review)
+  Writing your first program
+  Unlocking print() power-ups
+  Introduction to variables
+  Working with text
+  Working with numbers
+  Modeling real-world calculations
+  Review: writing your first program
+
+Week 2 — Core foundations (12 lessons: division // and %, rounding/money, input(),
+         tracebacks, functions i-iii, scope, Challenge, Review)
+
+Week 3 — Decisions and loops (12 lessons: if/else, logical ops, booleans, membership,
+         elif, for/range, while, break/continue, counters, Challenge, Review)
+
+Week 4 — Introduction to Python summary (10 lessons: string indexing/slicing & methods,
+         lists i-iv, sorted vs .sort, Challenge, Review) -> Exam -> Retake review
+```
+
+---
+
 ## Important Vercel Assumption
 
 Vercel will host the web app, static content, and optional API routes.
@@ -204,17 +258,18 @@ course-tutor/
         promptInjection.json
 
   content/
-    probability_101/
-      course.json
-      concepts/
-        conditional_probability.json
+    py101/
+      program.json
+      modules/
+        week_1.json
+      lessons/
+        writing_your_first_program.json
       sources/
-        lecture_02_slides.json
-        lecture_02_transcript.json
+        week_1_notes.json
 
   public/
     content/
-      probability_101/
+      py101/
         course-manifest.json
 
   docs/
@@ -287,7 +342,7 @@ Prove the teaching flow works without any model.
 
 ### Build
 
-Hardcode one concept: Conditional Probability.
+Hardcode one lesson: PY101 Week 1, "Writing your first program".
 
 The flow should be:
 
@@ -304,15 +359,22 @@ Show explanation chunk 1
 Create one hardcoded lesson object in TypeScript:
 
 ```ts
-const conditionalProbabilityLesson = {
-  conceptId: "conditional_probability",
-  title: "Conditional Probability",
+const writingYourFirstProgramLesson = {
+  lessonId: "writing_your_first_program",
+  title: "Writing your first program",
+  type: "standard",
   chunks: [
     {
-      chunkId: "given_that_intro",
-      explanation: "Conditional probability means we ask for a chance after we already know something else happened.",
-      checkQuestion: "In P(A | B), which event is already known?",
-      expectedAnswer: "B"
+      chunkId: "print_intro",
+      explanation: "A Python program runs top to bottom. print() shows text on the screen — the text goes inside the parentheses, in quotes.",
+      checkQuestion: 'Which function displays text on screen in Python?',
+      expectedAnswer: "print"
+    },
+    {
+      chunkId: "print_string",
+      explanation: 'Text in quotes is a string. print("Hello") displays Hello without the quotes.',
+      checkQuestion: 'What does print("Hello") display?',
+      expectedAnswer: "Hello"
     }
   ]
 };
@@ -358,10 +420,12 @@ Move hardcoded content into validated JSON files.
 
 ### Course Pack Minimum Shape
 
+The pack mirrors the Maestro hierarchy: Program -> Modules (weeks) -> Lessons -> chunks.
+
 ```json
 {
-  "course_id": "probability_101",
-  "course_title": "Probability 101",
+  "program_id": "py101",
+  "program_title": "Introduction to Python (PY101)",
   "teacher_style": {
     "tone": "patient, clear, concise",
     "rules": [
@@ -370,36 +434,50 @@ Move hardcoded content into validated JSON files.
       "do not give long lectures"
     ]
   },
-  "concepts": []
+  "modules": []
 }
 ```
 
-### Concept Minimum Shape
+### Module (Week) Minimum Shape
 
 ```json
 {
-  "concept_id": "conditional_probability",
-  "title": "Conditional Probability",
+  "module_id": "week_1",
+  "title": "Writing your first program",
+  "order": 1,
+  "lessons": []
+}
+```
+
+### Lesson Minimum Shape
+
+```json
+{
+  "lesson_id": "writing_your_first_program",
+  "title": "Writing your first program",
+  "type": "standard",
   "order": 1,
   "prerequisites": [],
-  "learning_goal": "Student can identify the condition in P(A | B).",
+  "learning_goal": "Student can write a program that prints text with print().",
   "lesson_chunks": [],
   "quiz_items": [],
   "common_mistakes": []
 }
 ```
 
+`type` is one of: `standard | challenge | review | weekly_review | exam | retake_review`.
+
 ### Lesson Chunk Minimum Shape
 
 ```json
 {
-  "chunk_id": "given_that_intro",
-  "goal": "Explain what 'given that' means.",
-  "approved_explanation": "Conditional probability means asking for a chance after we already know something else happened.",
-  "simple_example": "What is the chance it rains, given that the sky is cloudy?",
-  "check_question": "In P(A | B), which event is already known?",
-  "expected_answer": "B",
-  "source_refs": ["Lecture 2, slide 14"]
+  "chunk_id": "print_intro",
+  "goal": "Introduce print() and how a program runs top to bottom.",
+  "approved_explanation": "A Python program runs top to bottom. print() shows text on screen; the text goes inside the parentheses, in quotes.",
+  "simple_example": "print(\"Hello, world!\") displays: Hello, world!",
+  "check_question": "Which function displays text on screen in Python?",
+  "expected_answer": "print",
+  "source_refs": ["PY101 Week 1, Writing your first program"]
 }
 ```
 
@@ -439,8 +517,9 @@ Create a state machine with states:
 
 ```ts
 type TutorState =
-  | "START_LESSON"
-  | "INTRODUCE_CONCEPT"
+  | "START_PROGRAM"
+  | "INTRODUCE_MODULE"
+  | "INTRODUCE_LESSON"
   | "EXPLAIN_CHUNK"
   | "ASK_UNDERSTANDING"
   | "ASK_MICRO_QUIZ"
@@ -448,26 +527,33 @@ type TutorState =
   | "GIVE_HINT"
   | "REMEDIATE"
   | "ADVANCE_CHUNK"
-  | "ADVANCE_CONCEPT"
-  | "END_LESSON";
+  | "ADVANCE_LESSON"
+  | "ADVANCE_MODULE"
+  | "END_PROGRAM";
 ```
 
 Create allowed transitions:
 
 ```ts
 const transitions = {
-  START_LESSON: ["INTRODUCE_CONCEPT"],
-  INTRODUCE_CONCEPT: ["EXPLAIN_CHUNK"],
+  START_PROGRAM: ["INTRODUCE_MODULE"],
+  INTRODUCE_MODULE: ["INTRODUCE_LESSON"],
+  INTRODUCE_LESSON: ["EXPLAIN_CHUNK"],
   EXPLAIN_CHUNK: ["ASK_UNDERSTANDING"],
   ASK_UNDERSTANDING: ["ASK_MICRO_QUIZ"],
   ASK_MICRO_QUIZ: ["EVALUATE_ANSWER"],
   EVALUATE_ANSWER: ["ADVANCE_CHUNK", "GIVE_HINT", "REMEDIATE"],
   GIVE_HINT: ["ASK_MICRO_QUIZ"],
   REMEDIATE: ["ASK_MICRO_QUIZ"],
-  ADVANCE_CHUNK: ["EXPLAIN_CHUNK", "ADVANCE_CONCEPT"],
-  ADVANCE_CONCEPT: ["INTRODUCE_CONCEPT", "END_LESSON"]
+  ADVANCE_CHUNK: ["EXPLAIN_CHUNK", "ADVANCE_LESSON"],
+  ADVANCE_LESSON: ["INTRODUCE_LESSON", "ADVANCE_MODULE"],
+  ADVANCE_MODULE: ["INTRODUCE_MODULE", "END_PROGRAM"]
 };
 ```
+
+Note: `review`, `weekly_review`, `exam`, and `retake_review` lessons reuse the quiz/evaluate
+states but are entered via `INTRODUCE_LESSON` like any other lesson; their `type` controls
+quiz selection and gating, not the transition graph.
 
 ### Do Not Build Yet
 
@@ -502,11 +588,12 @@ Create local student state:
 ```ts
 interface StudentState {
   studentId: string;
-  courseId: string;
-  currentConceptId: string;
+  programId: string;
+  currentModuleId: string;
+  currentLessonId: string;
   currentChunkId: string;
   currentState: TutorState;
-  mastery: Record<string, number>;
+  mastery: Record<string, number>; // keyed by lessonId
   mistakes: Record<string, number>;
   recentAnswers: StudentAnswerRecord[];
 }
@@ -527,7 +614,7 @@ function updateMastery(oldScore: number, result: "correct" | "partial" | "wrong"
 Start with localStorage:
 
 ```text
-localStorage key: course-tutor:progress:probability_101
+localStorage key: course-tutor:progress:py101
 ```
 
 Move to IndexedDB later if the state becomes large.
@@ -1239,40 +1326,46 @@ browser compatibility warning
 
 # First Concrete Course Target
 
-Start with exactly one concept.
+Start with exactly one lesson from the real program.
 
-## Course
+## Program
 
 ```text
-Probability 101
+PY101 — Introduction to Python
 ```
 
-## Concept
+## Module (Week)
 
 ```text
-Conditional Probability
+Week 1 — Writing your first program
+```
+
+## Lesson
+
+```text
+Writing your first program
 ```
 
 ## Lesson Chunks
 
-1. What "given that" means
-2. Meaning of `P(A | B)`
-3. Difference between `P(A | B)` and `P(B | A)`
-4. Simple real-world example
+1. A program runs top to bottom; `print()` shows text
+2. Text in quotes is a string; `print("Hello")` shows `Hello`
+3. Printing more than one thing
+4. A first complete tiny program
 
 ## Quizzes
 
-1. In `P(A | B)`, which event is already known?
-2. In "chance of passing given that the student studied," what is the condition?
-3. Are `P(A | B)` and `P(B | A)` always the same?
-4. Write a sentence that matches `P(rain | cloudy)`.
+1. Which function displays text on screen in Python?
+2. What does `print("Hello")` display?
+3. Why do we put quotes around text?
+4. Write a line that prints your name.
 
 ## Common Mistakes
 
-- Student thinks A is already known.
-- Student swaps A and B.
-- Student thinks conditional probability means causation.
-- Student thinks `P(A | B)` always equals `P(B | A)`.
+- Forgetting the parentheses: `print "Hello"`.
+- Forgetting the quotes around text.
+- Expecting the quotes to appear in the output.
+- Misspelling `print` (e.g. `Print` / `prnt`) — Python is case-sensitive.
 
 ---
 
@@ -1283,7 +1376,7 @@ Conditional Probability
 ```ts
 async function handleStudentEvent(event: StudentEvent) {
   const state = getStudentState();
-  const course = getCoursePack(state.courseId);
+  const course = getCoursePack(state.programId);
   const lessonChunk = getCurrentLessonChunk(course, state);
 
   const deterministicResult = handleDeterministicEvent(event, state, lessonChunk);
@@ -1310,8 +1403,8 @@ async function handleQuestionInterrupt(event, state, course) {
 
   const chunks = retrieveCourseChunks({
     query: event.text,
-    courseId: state.courseId,
-    conceptId: state.currentConceptId
+    programId: state.programId,
+    lessonId: state.currentLessonId
   });
 
   const draft = await answerQuestionFromChunks(event.text, chunks, savedState);

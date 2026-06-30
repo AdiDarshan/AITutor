@@ -4,6 +4,10 @@ High-level todo list derived from `ai_course_tutor_build_plan.md`. I work throug
 in order, in small pieces, and check items off as their acceptance criteria are met.
 I will not skip ahead or change the plan without asking first.
 
+**Target course:** PY101 — Introduction to Python, following the Maestro LMS structure:
+Program → Module (Week) → Lesson → chunks. Lesson types: standard, challenge, review,
+weekly_review, exam, retake_review.
+
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 **Current focus:** MVP 0 — app scaffolded & building locally; Vercel deploy pending (needs your account).
@@ -19,14 +23,16 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
   - [x] Lesson view at `/` with `TutorMessage` + `QuizCard` placeholders
   - [x] `npm run build` passes; serves 200 with content locally
   - [ ] Deployed to Vercel (needs your Vercel account)
-- [ ] **MVP 1 — No-AI lesson player.** Hardcoded Conditional Probability lesson; flow:
-  explain → check question → submit → fixed feedback → next chunk. ≥2 chunks, deterministic.
+- [ ] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
+  lesson; flow: explain → check question → submit → fixed feedback → next chunk. ≥2 chunks,
+  deterministic.
 - [ ] **MVP 2 — Course Pack JSON + Zod.** Move hardcoded content into validated JSON
-  (course / concept / lesson-chunk shapes). Bad JSON fails validation clearly.
-- [ ] **MVP 3 — Tutor state machine.** Explicit states + allowed transitions; illegal
-  transitions impossible; debug view of current state.
-- [ ] **MVP 4 — Student mastery model.** Local `StudentState`, mastery update fn,
-  localStorage persistence across refresh; advance decisions use mastery.
+  (program / module / lesson / lesson-chunk shapes, incl. lesson `type`). Bad JSON fails
+  validation clearly.
+- [ ] **MVP 3 — Tutor state machine.** Explicit states + allowed transitions across the
+  module → lesson → chunk hierarchy; illegal transitions impossible; debug view of current state.
+- [ ] **MVP 4 — Student mastery model.** Local `StudentState` (program/module/lesson), mastery
+  update fn keyed by lesson, localStorage persistence across refresh; advance uses mastery.
 - [ ] **MVP 5 — Quick action UI.** Structured `StudentEvent` buttons (understand/confused/
   example/quiz/ask/continue) driving the state machine; free-text quiz answers still work.
 
@@ -61,8 +67,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
   misconceptions, interrupts, refusal, injection, length, JSON validity); pass/fail summary.
 - [ ] **MVP 15 — Embeddings + hybrid retrieval.** Keyword + embedding similarity + concept
   boost; build-time or in-browser embeddings; keyword fallback if embeddings fail.
-- [ ] **MVP 16 — Progress & review mode.** Concept map, mastery scores, weak-topic review,
-  resume from last session, session summary.
+- [ ] **MVP 16 — Progress & review mode.** Module/lesson map, mastery scores, weak-topic
+  review, resume from last session, session summary. Implements the Maestro `review` /
+  `weekly_review` / `exam` / `retake_review` lesson types as first-class assessment/gating.
 
 ## Phase 6 — Authoring, server, hardening
 
@@ -77,10 +84,10 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Definition of Done (first real MVP)
 
-This end-to-end flow works on Vercel: open app → start Conditional Probability → tutor explains
-a small piece → student says "yes" → tutor still asks a tiny check → wrong answer → tutor detects
-mistake → gives hint → retry → advances only on correct → student asks a question → tutor answers
-from course material → tutor returns to the lesson.
+This end-to-end flow works on Vercel: open app → start PY101 Week 1 "Writing your first program"
+→ tutor explains a small piece → student says "yes" → tutor still asks a tiny check → wrong answer
+→ tutor detects mistake → gives hint → retry → advances only on correct → student asks a question
+→ tutor answers from course material → tutor returns to the lesson.
 
 ## Key guardrails (from the plan)
 

@@ -7,6 +7,8 @@ automatically at the start of every session. Edit anything below to change how I
 
 <!-- What is this project? One or two sentences. -->
 AITutor — a browser-first guided AI course tutor (Next.js + WebLLM).
+First build target: **PY101 — Introduction to Python**, following the Maestro LMS structure
+(Program → Module/Week → Lesson → chunks; lesson types: standard/challenge/review/weekly_review/exam/retake_review).
 - Full build plan: `ai_course_tutor_build_plan.md`
 - High-level todo / progress tracker: `PROGRESS.md` (work through it in order, top to bottom)
 

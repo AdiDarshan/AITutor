@@ -1,0 +1,110 @@
+{
+  "program_id": "ice_and_water",
+  "program_title": "Everyday Science: Why ice floats",
+  "teacher_style": {
+    "tone": "patient, clear, concise",
+    "rules": [
+      "explain one idea at a time",
+      "ask short check questions",
+      "do not give long lectures"
+    ]
+  },
+  "modules": [
+    {
+      "module_id": "water_and_ice",
+      "title": "Water and ice",
+      "order": 1,
+      "lessons": [
+        {
+          "lesson_id": "why_does_ice_float",
+          "title": "Why does ice float?",
+          "type": "standard",
+          "order": 1,
+          "prerequisites": [],
+          "learning_goal": "Explain why ice floats on liquid water, using the idea of density.",
+          "lesson_chunks": [
+            {
+              "chunk_id": "what_is_density",
+              "goal": "Introduce density and the float/sink rule.",
+              "approved_explanation": "Density means how much material is packed into a certain amount of space. If something is more dense than a liquid, it sinks in that liquid. If it is less dense, it floats. So whether an object floats or sinks is really a contest of density against the liquid around it.",
+              "check_question": "Something that is LESS dense than water — does it sink or float?",
+              "expected_answer": "float",
+              "accepted_answers": ["float", "floats", "it floats"],
+              "correct_feedback": "Right — less dense than the liquid means it floats.",
+              "hint": "Less dense than the liquid rises to the top.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            },
+            {
+              "chunk_id": "most_solids_sink",
+              "goal": "Establish the normal case: solids are denser than their liquid.",
+              "approved_explanation": "For most materials, the solid form is more dense than the liquid form. The particles pack together more tightly when they harden. That is why, for most substances, a frozen piece would sink in its own liquid.",
+              "check_question": "For most materials, does the solid form sink or float in its own liquid?",
+              "expected_answer": "sink",
+              "accepted_answers": ["sink", "sinks", "it sinks"],
+              "correct_feedback": "Yes — for most materials the solid is denser, so it sinks.",
+              "hint": "Most solids pack tighter than their liquid, so they go down.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            },
+            {
+              "chunk_id": "water_is_special",
+              "goal": "Explain that freezing water spreads its molecules apart.",
+              "approved_explanation": "Water breaks this pattern. When water freezes into ice, its molecules lock into a rigid structure that actually holds them farther apart than they are in liquid water. So freezing water spreads its molecules out, leaving more empty space between them.",
+              "check_question": "When water freezes into ice, do its molecules end up closer together or farther apart?",
+              "expected_answer": "farther apart",
+              "accepted_answers": ["farther apart", "farther", "further apart", "further", "apart", "spread out"],
+              "correct_feedback": "Exactly — freezing pushes water's molecules farther apart.",
+              "hint": "Ice locks the molecules into a roomier pattern than the liquid.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            },
+            {
+              "chunk_id": "ice_is_less_dense",
+              "goal": "Connect spacing to lower density.",
+              "approved_explanation": "Because the molecules in ice sit farther apart, the same amount of water takes up more space once it becomes ice. More space for the same material means less is packed into each bit of room — so ice is less dense than liquid water.",
+              "check_question": "Is ice more dense or less dense than liquid water?",
+              "expected_answer": "less dense",
+              "accepted_answers": ["less dense", "less", "lower", "less density"],
+              "correct_feedback": "Right — same material, more space, so ice is less dense.",
+              "hint": "More space for the same stuff means a lower density.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            },
+            {
+              "chunk_id": "so_ice_floats",
+              "goal": "Apply the density rule to conclude ice floats.",
+              "approved_explanation": "Now put it together. Ice is less dense than the liquid water around it, and we know that less dense things float. So ice floats on top of liquid water. That is exactly why an ice cube bobs at the top of a glass instead of sinking.",
+              "check_question": "Does ice float or sink in liquid water?",
+              "expected_answer": "float",
+              "accepted_answers": ["float", "floats", "it floats"],
+              "correct_feedback": "🎉 That's it — being less dense, ice floats.",
+              "hint": "Less dense than the water around it, so it rises to the top.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            },
+            {
+              "chunk_id": "why_it_matters",
+              "goal": "Payoff: floating ice insulates lakes so life survives winter.",
+              "approved_explanation": "This small fact matters for life. Because ice floats, it forms a layer on the surface of a lake in winter. That floating ice acts like a blanket, keeping the water underneath from freezing solid, so fish and other creatures can survive the cold months below it.",
+              "check_question": "Because ice floats, it forms an insulating layer — on top of the water, or at the bottom?",
+              "expected_answer": "on top",
+              "accepted_answers": ["on top", "top", "the top", "surface", "on the surface", "on the top"],
+              "correct_feedback": "🎉 Exactly — floating ice blankets the top, so life survives below.",
+              "hint": "Floating means it sits where? Above the water.",
+              "source_refs": ["Everyday Science: Water and ice"]
+            }
+          ],
+          "quiz_items": [],
+          "common_mistakes": [
+            {
+              "mistake_id": "lighter_not_density",
+              "description": "Student thinks ice floats simply because it is lighter.",
+              "remediation": "Clarify it is about density (material per space), not total weight."
+            },
+            {
+              "mistake_id": "all_solids_float",
+              "description": "Student assumes every solid floats in its own liquid.",
+              "remediation": "Point out most solids sink; water is the unusual exception."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

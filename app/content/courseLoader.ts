@@ -1,10 +1,11 @@
 import py101Json from "@/content/py101/course.json";
 import scienceJson from "@/content/everyday_science/course.json";
+import iceJson from "@/content/ice_and_water/course.json";
 import { coursePackSchema } from "./courseSchema";
 import type { CoursePack } from "./types";
 
 // All bundled course packs (validated at load time).
-const RAW_COURSES: unknown[] = [py101Json, scienceJson];
+const RAW_COURSES: unknown[] = [py101Json, scienceJson, iceJson];
 
 function mapCoursePack(raw: unknown): CoursePack {
   const parsed = coursePackSchema.safeParse(raw);

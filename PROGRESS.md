@@ -10,8 +10,8 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 1 — interactive no-AI lesson player built & building locally; verify in
-browser, then start MVP 2. (MVP 0 Vercel deploy still pending — needs your account.)
+**Current focus:** MVP 2 done (Course Pack JSON + Zod, verified). Next: MVP 3 — tutor state
+machine. (MVP 0 Vercel deploy still pending — needs your account.)
 
 ---
 
@@ -24,17 +24,20 @@ browser, then start MVP 2. (MVP 0 Vercel deploy still pending — needs your acc
   - [x] Lesson view at `/` with `TutorMessage` + `QuizCard` placeholders
   - [x] `npm run build` passes; serves 200 with content locally
   - [ ] Deployed to Vercel (needs your Vercel account)
-- [~] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
+- [x] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
   lesson; flow: explain → check question → submit → fixed feedback → next chunk. ≥2 chunks,
   deterministic.
   - [x] 4-chunk hardcoded lesson (`app/lessonContent.ts`)
   - [x] Chat UI: `LessonPlayer` (message list) + `TutorMessage` / `StudentMessage` / `Composer`
   - [x] Deterministic string matching, retry on wrong; auto-advance after correct (no Continue button)
-  - [x] Advance gated on correct answer; build passes; initial render verified
-  - [ ] Manual click-through confirmed in browser
-- [ ] **MVP 2 — Course Pack JSON + Zod.** Move hardcoded content into validated JSON
+  - [x] Advance gated on correct answer; build passes; click-through confirmed in browser
+- [x] **MVP 2 — Course Pack JSON + Zod.** Move hardcoded content into validated JSON
   (program / module / lesson / lesson-chunk shapes, incl. lesson `type`). Bad JSON fails
   validation clearly.
+  - [x] `content/py101/course.json` (program → modules → lessons → chunks + common_mistakes)
+  - [x] Zod schema (`app/content/courseSchema.ts`) + runtime types (`types.ts`)
+  - [x] `courseLoader.ts` validates + maps snake_case JSON → camelCase, readable errors
+  - [x] Page loads from JSON; lesson player unchanged; bad `type` fails with path-pinpointed error
 - [ ] **MVP 3 — Tutor state machine.** Explicit states + allowed transitions across the
   module → lesson → chunk hierarchy; illegal transitions impossible; debug view of current state.
 - [ ] **MVP 4 — Student mastery model.** Local `StudentState` (program/module/lesson), mastery

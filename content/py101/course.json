@@ -1,0 +1,101 @@
+{
+  "program_id": "py101",
+  "program_title": "Introduction to Python (PY101)",
+  "teacher_style": {
+    "tone": "patient, clear, concise",
+    "rules": [
+      "explain one idea at a time",
+      "ask short check questions",
+      "do not give long lectures"
+    ]
+  },
+  "modules": [
+    {
+      "module_id": "week_1",
+      "title": "Writing your first program",
+      "order": 1,
+      "lessons": [
+        {
+          "lesson_id": "writing_your_first_program",
+          "title": "Writing your first program",
+          "type": "standard",
+          "order": 1,
+          "prerequisites": [],
+          "learning_goal": "Student can write a program that prints text with print().",
+          "lesson_chunks": [
+            {
+              "chunk_id": "print_intro",
+              "goal": "Introduce print() and how a program runs top to bottom.",
+              "approved_explanation": "A Python program runs from top to bottom, one line at a time. To show something on the screen, you use print(). Whatever you want to display goes inside the parentheses.",
+              "simple_example": "print(\"Hello, world!\")   →   Hello, world!",
+              "check_question": "Which built-in function displays text on the screen in Python?",
+              "expected_answer": "print",
+              "accepted_answers": ["print"],
+              "correct_feedback": "Exactly — print() is how you show output.",
+              "hint": "It's a 5-letter word, and you call it with parentheses: ____().",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "print_string",
+              "goal": "Introduce strings and that print shows the text inside the quotes.",
+              "approved_explanation": "The text you want to print goes inside quotes. Text in quotes is called a string. The quotes tell Python where the text starts and ends.",
+              "simple_example": "print(\"Python\")   →   Python",
+              "check_question": "What does print(\"Hello\") display on the screen?",
+              "expected_answer": "Hello",
+              "accepted_answers": ["hello"],
+              "correct_feedback": "Right — the text inside the quotes.",
+              "hint": "Python prints what's between the quotes — and only that.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "quotes_not_shown",
+              "goal": "Clarify that quotation marks are markers and do not appear in output.",
+              "approved_explanation": "Notice the quotation marks never appear in the output — they are just markers that tell Python where the string begins and ends.",
+              "simple_example": "print(\"Python\")   →   Python   (no quotes in the result)",
+              "check_question": "Do the quotation marks themselves appear in the printed output? (yes / no)",
+              "expected_answer": "no",
+              "accepted_answers": ["no", "nope"],
+              "correct_feedback": "Correct — the quotes are markers, not content.",
+              "hint": "Look at the example: print(\"Python\") shows Python, with no quotes around it.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "first_program",
+              "goal": "Have the student write their first working line of code.",
+              "approved_explanation": "Now put it together and write your first line of code: the function name, parentheses, and your text in quotes inside them.",
+              "check_question": "Write a line of code that prints the word:  Python",
+              "expected_answer": "print(\"Python\")",
+              "accepted_answers": ["print(\"Python\")", "print Python"],
+              "correct_feedback": "🎉 That's a working Python program!",
+              "hint": "Use print(), and put Python in quotes inside the parentheses: print(\"...\").",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            }
+          ],
+          "quiz_items": [],
+          "common_mistakes": [
+            {
+              "mistake_id": "missing_parentheses",
+              "description": "Student writes print \"Hello\" without parentheses.",
+              "remediation": "Remind that print is a function call: the text goes inside ()."
+            },
+            {
+              "mistake_id": "missing_quotes",
+              "description": "Student writes print(Hello) without quotes around the text.",
+              "remediation": "Text must be in quotes so Python treats it as a string."
+            },
+            {
+              "mistake_id": "quotes_in_output",
+              "description": "Student expects the quotation marks to appear in the output.",
+              "remediation": "Show that the quotes are markers and are not printed."
+            },
+            {
+              "mistake_id": "misspelled_print",
+              "description": "Student writes Print or prnt; Python is case-sensitive.",
+              "remediation": "Point out the exact spelling: lowercase print."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

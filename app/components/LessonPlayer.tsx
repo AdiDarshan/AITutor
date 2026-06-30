@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Lesson, LessonChunk } from "../lessonContent";
+import type { Lesson, LessonChunk } from "../content/types";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
 import Composer from "./Composer";

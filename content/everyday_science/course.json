@@ -1,0 +1,110 @@
+{
+  "program_id": "everyday_science",
+  "program_title": "Everyday Science",
+  "teacher_style": {
+    "tone": "patient, clear, concise",
+    "rules": [
+      "explain one idea at a time",
+      "ask short check questions",
+      "do not give long lectures"
+    ]
+  },
+  "modules": [
+    {
+      "module_id": "light_and_sky",
+      "title": "Light and the sky",
+      "order": 1,
+      "lessons": [
+        {
+          "lesson_id": "why_is_the_sky_blue",
+          "title": "Why is the sky blue?",
+          "type": "standard",
+          "order": 1,
+          "prerequisites": [],
+          "learning_goal": "Explain why the daytime sky looks blue and why sunsets look red, using the idea of light scattering.",
+          "lesson_chunks": [
+            {
+              "chunk_id": "white_light_is_many_colors",
+              "goal": "Establish that white sunlight is a mix of many colors.",
+              "approved_explanation": "Sunlight looks white or colorless, but it is really a mix of many colors blended together — red, orange, yellow, green, blue, and violet. When all of these colors reach our eyes at once, we see the blend as plain white light. A rainbow is simply sunlight split back into those colors.",
+              "check_question": "Is sunlight made of just one color, or many colors mixed together?",
+              "expected_answer": "many",
+              "accepted_answers": ["many", "many colors", "a mix", "mix", "mixed", "lots of colors"],
+              "correct_feedback": "Right — white sunlight is really many colors mixed together.",
+              "hint": "Think of a rainbow — those colors all come out of plain sunlight.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            },
+            {
+              "chunk_id": "colors_are_waves",
+              "goal": "Introduce that each color is a wave with a different size.",
+              "approved_explanation": "Each color of light travels as a wave, and every color has its own wave size. Blue and violet light travel as short, small waves. Red and orange light travel as longer waves. This difference in wave size is exactly what makes one color different from another.",
+              "check_question": "Does blue light travel in shorter waves or longer waves than red light?",
+              "expected_answer": "shorter",
+              "accepted_answers": ["shorter", "short", "shorter waves"],
+              "correct_feedback": "Yes — blue light has shorter waves than red light.",
+              "hint": "Blue sits at the short-wave end; red is at the long-wave end.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            },
+            {
+              "chunk_id": "air_scatters_light",
+              "goal": "Introduce scattering by air molecules.",
+              "approved_explanation": "The air around the Earth is full of tiny gas molecules. When sunlight passes through the air, these molecules knock the light and send it bouncing off in many directions. Sending light bouncing all around like this has a name: it is called scattering.",
+              "check_question": "What is it called when tiny air molecules send light bouncing in all directions?",
+              "expected_answer": "scattering",
+              "accepted_answers": ["scattering", "scatter", "scattered"],
+              "correct_feedback": "Exactly — that bouncing in all directions is called scattering.",
+              "hint": "It begins with 'scatter…'.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            },
+            {
+              "chunk_id": "blue_scatters_most",
+              "goal": "State the key fact: short (blue) waves scatter most.",
+              "approved_explanation": "Here is the key fact: tiny air molecules scatter short waves much more strongly than long waves. Because blue light has the shortest waves, the air scatters blue light far more than red light. So as sunlight crosses the sky, the blue part gets bounced all over the place.",
+              "check_question": "Which color does the air scatter the most — blue or red?",
+              "expected_answer": "blue",
+              "accepted_answers": ["blue"],
+              "correct_feedback": "Right — short-waved blue light is scattered the most.",
+              "hint": "It is the color with the shortest waves.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            },
+            {
+              "chunk_id": "why_sky_is_blue",
+              "goal": "Tie it together: scattered blue light fills the sky.",
+              "approved_explanation": "Because blue light is scattered all across the sky, it reaches your eyes from every direction when you look up. You are seeing scattered blue sunlight coming from all over the sky at once. That is the reason the daytime sky looks blue.",
+              "check_question": "Fill in the blank: the sky looks blue because blue light gets ______ all across the sky.",
+              "expected_answer": "scattered",
+              "accepted_answers": ["scattered", "scatter", "scattering"],
+              "correct_feedback": "That's it — scattered blue light reaches you from every direction, so the sky looks blue.",
+              "hint": "It is the same word we just learned for light bouncing in all directions.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            },
+            {
+              "chunk_id": "red_sunsets",
+              "goal": "Apply the idea to explain red sunsets (the payoff).",
+              "approved_explanation": "At sunset the sun is low in the sky, so its light has to travel through much more air to reach you. Over that long path, almost all of the blue light gets scattered away before it arrives. The colors left to reach your eyes are the long waves — the reds and oranges — and that is why sunsets look red and orange.",
+              "check_question": "At sunset the light crosses more air. Which color gets scattered away, leaving red behind?",
+              "expected_answer": "blue",
+              "accepted_answers": ["blue", "blue light", "blue and violet"],
+              "correct_feedback": "🎉 Exactly — the blue scatters away over the long path, leaving the reds and oranges of a sunset.",
+              "hint": "It is the same short-waved color that scatters the most.",
+              "source_refs": ["Everyday Science: Light and the sky"]
+            }
+          ],
+          "quiz_items": [],
+          "common_mistakes": [
+            {
+              "mistake_id": "reflects_ocean",
+              "description": "Student thinks the sky is blue because it reflects the ocean.",
+              "remediation": "Clarify it is air scattering blue sunlight, not a reflection of the sea."
+            },
+            {
+              "mistake_id": "sunlight_one_color",
+              "description": "Student thinks sunlight is a single color.",
+              "remediation": "Remind that sunlight is many colors mixed; a rainbow reveals them."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

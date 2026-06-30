@@ -27,7 +27,13 @@ export function useSpeaker(): Speaker {
     clientRef.current = client;
     const ok = client.isSupported();
     setSupported(ok);
-    if (!ok) setStatus("unsupported");
+    if (!ok) {
+      setStatus("unsupported");
+      return;
+    }
+    // Reflect an already-loaded model (e.g. after switching courses).
+    const cur = client.status();
+    if (cur === "ready" || cur === "loading") setStatus(cur);
   }, []);
 
   const enable = useCallback(() => {

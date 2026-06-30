@@ -1,20 +1,23 @@
-import courseJson from "@/content/py101/course.json";
+import py101Json from "@/content/py101/course.json";
+import scienceJson from "@/content/everyday_science/course.json";
 import { coursePackSchema } from "./courseSchema";
 import type { CoursePack } from "./types";
 
-/**
- * Validate the Course Pack JSON against the schema and map it to the runtime
- * (camelCase) shape. Throws a readable error listing every validation issue —
- * surfaced by Next's dev error overlay during development.
- */
-export function loadCoursePack(): CoursePack {
-  const parsed = coursePackSchema.safeParse(courseJson);
+// All bundled course packs (validated at load time).
+const RAW_COURSES: unknown[] = [py101Json, scienceJson];
+
+function mapCoursePack(raw: unknown): CoursePack {
+  const parsed = coursePackSchema.safeParse(raw);
 
   if (!parsed.success) {
+    const id =
+      raw && typeof raw === "object" && "program_id" in raw
+        ? String((raw as { program_id: unknown }).program_id)
+        : "unknown";
     const issues = parsed.error.issues
       .map((i) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`)
       .join("\n");
-    throw new Error(`Invalid course pack (content/py101/course.json):\n${issues}`);
+    throw new Error(`Invalid course pack (program "${id}"):\n${issues}`);
   }
 
   const data = parsed.data;
@@ -46,4 +49,14 @@ export function loadCoursePack(): CoursePack {
       })),
     })),
   };
+}
+
+/** Validate and return all bundled course packs. Throws on the first invalid one. */
+export function loadAllCourses(): CoursePack[] {
+  return RAW_COURSES.map(mapCoursePack);
+}
+
+/** Convenience: the first course pack. */
+export function loadCoursePack(): CoursePack {
+  return mapCoursePack(RAW_COURSES[0]);
 }

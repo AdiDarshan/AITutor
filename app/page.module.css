@@ -6,23 +6,3 @@
   display: flex;
   flex-direction: column;
 }
-
-.header {
-  flex: 0 0 auto;
-  margin: 24px 0 16px;
-}
-
-.course {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-.concept {
-  margin: 4px 0 0;
-  font-size: 28px;
-  font-weight: 700;
-}

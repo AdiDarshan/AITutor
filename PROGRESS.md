@@ -10,8 +10,8 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 2 done (Course Pack JSON + Zod, verified). Next: MVP 3 — tutor state
-machine. (MVP 0 Vercel deploy still pending — needs your account.)
+**Current focus:** MVP 3 done (explicit tutor state machine, verified). Next: MVP 4 — student
+mastery model. (MVP 0 Vercel deploy still pending — needs your account.)
 
 ---
 
@@ -38,8 +38,12 @@ machine. (MVP 0 Vercel deploy still pending — needs your account.)
   - [x] Zod schema (`app/content/courseSchema.ts`) + runtime types (`types.ts`)
   - [x] `courseLoader.ts` validates + maps snake_case JSON → camelCase, readable errors
   - [x] Page loads from JSON; lesson player unchanged; bad `type` fails with path-pinpointed error
-- [ ] **MVP 3 — Tutor state machine.** Explicit states + allowed transitions across the
+- [x] **MVP 3 — Tutor state machine.** Explicit states + allowed transitions across the
   module → lesson → chunk hierarchy; illegal transitions impossible; debug view of current state.
+  - [x] `app/tutor/stateMachine.ts` — 13 states + transition table + `assertTransition` guard
+  - [x] `app/tutor/tutorMachine.ts` — pure reducer driving the chat through the machine
+  - [x] `LessonPlayer` refactored to `useReducer`; ad-hoc state removed
+  - [x] Debug chip shows live state + position + transition history; tsc clean
 - [ ] **MVP 4 — Student mastery model.** Local `StudentState` (program/module/lesson), mastery
   update fn keyed by lesson, localStorage persistence across refresh; advance uses mastery.
 - [ ] **MVP 5 — Quick action UI.** Structured `StudentEvent` buttons (understand/confused/

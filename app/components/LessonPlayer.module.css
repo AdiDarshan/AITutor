@@ -5,6 +5,41 @@
   min-height: 0;
 }
 
+.debugBar {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+}
+
+.debugChip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+}
+
+.debugPanel {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #f0f2f5;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.debugHistory {
+  word-break: break-word;
+  opacity: 0.8;
+}
+
 .messages {
   flex: 1 1 auto;
   min-height: 0;

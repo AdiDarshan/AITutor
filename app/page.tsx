@@ -16,7 +16,7 @@ export default function LessonPage() {
         <h1 className={styles.concept}>{lesson.title}</h1>
       </header>
 
-      <LessonPlayer lesson={lesson} />
+      <LessonPlayer course={course} />
     </main>
   );
 }

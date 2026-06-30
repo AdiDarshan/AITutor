@@ -10,8 +10,8 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 4 done (mastery model + localStorage persistence, verified). Next: MVP 5
-— quick action UI. (MVP 0 Vercel deploy still pending — needs your account.)
+**Current focus:** MVP 5 done (quick action UI, verified). Next: MVP 6 — WebLLM client-only
+speaker (first LLM connection). (MVP 0 Vercel deploy still pending — needs your account.)
 
 ---
 
@@ -50,8 +50,12 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
   - [x] `app/storage/progressStore.ts` — load/save/clear in localStorage (`course-tutor:progress:py101`)
   - [x] Reducer tracks mastery + mistakes; RESTORE / RESET actions; `toSavedProgress`
   - [x] Player restores on mount, persists on change; debug panel shows mastery/mistakes + reset
-- [ ] **MVP 5 — Quick action UI.** Structured `StudentEvent` buttons (understand/confused/
-  example/quiz/ask/continue) driving the state machine; free-text quiz answers still work.
+- [x] **MVP 5 — Quick action UI.** Structured `StudentEvent` buttons (understand/confused/
+  example/quiz/ask) driving the state machine; free-text quiz answers still work.
+  - [x] `app/tutor/events.ts` — `StudentEvent` union; reducer handles each event
+  - [x] `QuickActions` component (optional helpers above the composer; don't gate the flow)
+  - [x] Ask-mode composer (Ask a question → ASK_QUESTION); structured events logged in dev
+  - [x] Quick actions surface approved content only (no AI text classification yet)
 
 ## Phase 2 — Add the local model (WebLLM)
 

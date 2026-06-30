@@ -8,8 +8,10 @@ import {
   toSavedProgress,
 } from "../tutor/tutorMachine";
 import { clearProgress, loadProgress, saveProgress } from "../storage/progressStore";
+import type { StudentEvent } from "../tutor/events";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
+import QuickActions from "./QuickActions";
 import Composer from "./Composer";
 import styles from "./LessonPlayer.module.css";
 
@@ -18,6 +20,15 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
   const [state, dispatch] = useReducer(reducer, course, buildInitialState);
   const [showDebug, setShowDebug] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [askMode, setAskMode] = useState(false);
+
+  // Dispatch a structured student event (logged in development).
+  function send(event: StudentEvent) {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[tutor event]", event);
+    }
+    dispatch(event);
+  }
 
   // Restore saved progress once, on mount (client only).
   useEffect(() => {
@@ -88,10 +99,30 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
         )}
       </div>
 
+      <QuickActions
+        onEvent={send}
+        onToggleAsk={() => setAskMode((v) => !v)}
+        askMode={askMode}
+        disabled={state.finished || !state.awaitingAnswer}
+      />
+
       <Composer
-        onSend={(text) => dispatch({ type: "SUBMIT_ANSWER", text })}
+        onSend={(text) => {
+          if (askMode) {
+            send({ type: "ASK_QUESTION", text });
+            setAskMode(false);
+          } else {
+            send({ type: "SUBMIT_ANSWER", text });
+          }
+        }}
         disabled={state.finished}
-        placeholder={state.finished ? "Lesson complete 🎉" : "Type your answer…"}
+        placeholder={
+          state.finished
+            ? "Lesson complete 🎉"
+            : askMode
+              ? "Type your question…"
+              : "Type your answer…"
+        }
       />
     </div>
   );

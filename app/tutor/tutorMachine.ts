@@ -1,5 +1,6 @@
 import type { CoursePack } from "../content/types";
 import type { SavedProgress } from "../storage/progressStore";
+import type { StudentEvent } from "./events";
 import { assertTransition, type TutorState } from "./stateMachine";
 import { updateMastery } from "./mastery";
 
@@ -28,7 +29,7 @@ export interface TutorRuntimeState {
 }
 
 export type TutorAction =
-  | { type: "SUBMIT_ANSWER"; text: string }
+  | StudentEvent
   | { type: "RESTORE"; saved: SavedProgress }
   | { type: "RESET" };
 
@@ -175,6 +176,42 @@ function reduce(
 
     case "RESTORE":
       return buildRestoredState(course, action.saved);
+
+    // Quick-action helpers: only while awaiting an answer; they surface approved
+    // content and stay at ASK_MICRO_QUIZ (no state transition, no model yet).
+    case "UNDERSTANDS": {
+      if (!s.awaitingAnswer || s.finished) return s;
+      return emitTutor(s, "Great — go ahead and answer the check question below.");
+    }
+
+    case "CONFUSED": {
+      if (!s.awaitingAnswer || s.finished) return s;
+      const chunk = currentChunk(course, s);
+      let st = emitTutor(s, "No problem — here's that idea again:");
+      return emitTutor(st, chunk.explanation, chunk.example);
+    }
+
+    case "REQUEST_EXAMPLE": {
+      if (!s.awaitingAnswer || s.finished) return s;
+      const chunk = currentChunk(course, s);
+      return chunk.example
+        ? emitTutor(s, "Here's an example:", chunk.example)
+        : emitTutor(s, "I don't have a separate example for this step — give the question a try and I'll help if needed.");
+    }
+
+    case "REQUEST_QUIZ": {
+      if (!s.awaitingAnswer || s.finished) return s;
+      return emitTutor(s, currentChunk(course, s).checkQuestion);
+    }
+
+    case "ASK_QUESTION": {
+      if (!s.awaitingAnswer || s.finished) return s;
+      let st = emitStudent(s, action.text);
+      return emitTutor(
+        st,
+        "I'll be able to answer questions from the course material in a later step. For now, let's keep going — try the check question above.",
+      );
+    }
 
     case "SUBMIT_ANSWER": {
       if (!s.awaitingAnswer || s.finished) return s;

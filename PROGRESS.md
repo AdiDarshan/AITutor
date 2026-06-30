@@ -8,10 +8,16 @@ I will not skip ahead or change the plan without asking first.
 Program → Module (Week) → Lesson → chunks. Lesson types: standard, challenge, review,
 weekly_review, exam, retake_review.
 
+**Direction change (user, supersedes plan):** the app is **AI-first / model-required**. The
+model auto-loads and the lesson is gated behind it (TutorGate). No "guided/static" mode toggle;
+devices without WebGPU or with a failed load get an error, not a no-AI lesson. This overrides
+the plan's static-fallback principle (MVP 7 / Browser & Device Plan). Per-message generation
+failures still fall back to the approved text (resilience, not a user-facing mode).
+
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 6 done (WebLLM speaker, Qwen2.5-1.5B, grounding guard, rebuilt PY101
-content; verified in browser). Next: MVP 7 — model status & fallbacks.
+**Current focus:** MVP 7 built (model status states + Mode A/B fallback toggle). Next: MVP 8 —
+quiz bank + deterministic grading. Three courses now load via the switcher.
 
 ---
 
@@ -67,8 +73,13 @@ content; verified in browser). Next: MVP 7 — model status & fallbacks.
   - [x] Single bubble: approved text → "writing…" → generated; `grounding.ts` guard falls back on drift
   - [x] Rebuilt PY101 lesson (8 chunks from zero context → write+run a print() script)
   - [x] Visible "Start over" button; tsc + build clean; verified in browser (WebGPU)
-- [ ] **MVP 7 — Model status + fallbacks.** Model status states + UI; Mode A (AI) / B
-  (static) / C (lesson-only). Unsupported/failed devices still get a working lesson.
+- [x] **MVP 7 — Model status + gating (AI-first, reworked per user).** Model auto-loads; lesson
+  gated behind it. (Supersedes the plan's Mode A/B/C static-fallback design.)
+  - [x] `useSpeaker` auto-loads on mount; exposes `checked`/`ready`/`retry` (no enable/toggle)
+  - [x] `TutorGate`: checking → downloading% → ready (lesson) / unsupported / failed+Retry
+  - [x] `CourseApp` gates the lesson on `speaker.ready`; speaker lifted up, passed to player
+  - [x] Removed `ModelStatus` toggle; per-message generation failure still falls back to approved text
+  - [x] tsc clean
 
 ## Phase 3 — Quizzing, grading, remediation
 

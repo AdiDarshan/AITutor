@@ -1,5 +1,7 @@
 import type { CoursePack } from "../content/types";
+import type { SavedProgress } from "../storage/progressStore";
 import { assertTransition, type TutorState } from "./stateMachine";
+import { updateMastery } from "./mastery";
 
 export interface ChatMessage {
   id: string;
@@ -17,13 +19,20 @@ export interface TutorRuntimeState {
   /** True while waiting for the student to answer the current check question. */
   awaitingAnswer: boolean;
   finished: boolean;
+  /** Mastery score (0..1) per lessonId. */
+  mastery: Record<string, number>;
+  /** Count of wrong answers per lessonId. */
+  mistakes: Record<string, number>;
   /** Ordered log of states entered, for the debug view. */
   history: TutorState[];
 }
 
-export type TutorAction = { type: "SUBMIT_ANSWER"; text: string };
+export type TutorAction =
+  | { type: "SUBMIT_ANSWER"; text: string }
+  | { type: "RESTORE"; saved: SavedProgress }
+  | { type: "RESET" };
 
-/** Deterministic answer matching — no AI in MVP 3. */
+/** Deterministic answer matching — no AI in MVP 4. */
 function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -33,8 +42,12 @@ function isCorrect(accepted: string[], raw: string): boolean {
   return accepted.some((a) => normalize(a) === got);
 }
 
+function currentLesson(course: CoursePack, s: TutorRuntimeState) {
+  return course.modules[s.moduleIndex].lessons[s.lessonIndex];
+}
+
 function currentChunk(course: CoursePack, s: TutorRuntimeState) {
-  return course.modules[s.moduleIndex].lessons[s.lessonIndex].chunks[s.chunkIndex];
+  return currentLesson(course, s).chunks[s.chunkIndex];
 }
 
 // --- small state-building helpers (all pure) ---
@@ -69,17 +82,51 @@ function presentChunk(s: TutorRuntimeState, course: CoursePack): TutorRuntimeSta
   return { ...s, awaitingAnswer: true };
 }
 
-export function buildInitialState(course: CoursePack): TutorRuntimeState {
-  let s: TutorRuntimeState = {
+function freshState(
+  moduleIndex: number,
+  lessonIndex: number,
+  chunkIndex: number,
+  mastery: Record<string, number>,
+  mistakes: Record<string, number>,
+): TutorRuntimeState {
+  return {
     machineState: "START_PROGRAM",
-    moduleIndex: 0,
-    lessonIndex: 0,
-    chunkIndex: 0,
+    moduleIndex,
+    lessonIndex,
+    chunkIndex,
     messages: [],
     awaitingAnswer: false,
     finished: false,
+    mastery,
+    mistakes,
     history: ["START_PROGRAM"],
   };
+}
+
+export function buildInitialState(course: CoursePack): TutorRuntimeState {
+  let s = freshState(0, 0, 0, {}, {});
+  s = tx(s, "INTRODUCE_MODULE");
+  s = tx(s, "INTRODUCE_LESSON");
+  return presentChunk(s, course);
+}
+
+/** Resume at a saved position with restored mastery/mistakes; re-presents the current chunk. */
+function buildRestoredState(course: CoursePack, saved: SavedProgress): TutorRuntimeState {
+  const mod = course.modules[saved.moduleIndex];
+  const lesson = mod?.lessons[saved.lessonIndex];
+  const chunk = lesson?.chunks[saved.chunkIndex];
+  if (!mod || !lesson || !chunk) {
+    // Saved position no longer valid (e.g. content changed) — start fresh.
+    return buildInitialState(course);
+  }
+
+  let s = freshState(
+    saved.moduleIndex,
+    saved.lessonIndex,
+    saved.chunkIndex,
+    saved.mastery ?? {},
+    saved.mistakes ?? {},
+  );
   s = tx(s, "INTRODUCE_MODULE");
   s = tx(s, "INTRODUCE_LESSON");
   return presentChunk(s, course);
@@ -87,7 +134,7 @@ export function buildInitialState(course: CoursePack): TutorRuntimeState {
 
 /** From ADVANCE_CHUNK after a correct answer, move to the next chunk/lesson/module or end. */
 function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
-  const lesson = course.modules[s.moduleIndex].lessons[s.lessonIndex];
+  const lesson = currentLesson(course, s);
   if (s.chunkIndex + 1 < lesson.chunks.length) {
     s = { ...s, chunkIndex: s.chunkIndex + 1 };
     return presentChunk(s, course);
@@ -123,8 +170,15 @@ function reduce(
   course: CoursePack,
 ): TutorRuntimeState {
   switch (action.type) {
+    case "RESET":
+      return buildInitialState(course);
+
+    case "RESTORE":
+      return buildRestoredState(course, action.saved);
+
     case "SUBMIT_ANSWER": {
       if (!s.awaitingAnswer || s.finished) return s;
+      const lessonId = currentLesson(course, s).lessonId;
       const chunk = currentChunk(course, s);
 
       let st = emitStudent(s, action.text);
@@ -132,20 +186,48 @@ function reduce(
       st = tx(st, "EVALUATE_ANSWER");
 
       if (isCorrect(chunk.accepted, action.text)) {
+        st = {
+          ...st,
+          mastery: {
+            ...st.mastery,
+            [lessonId]: updateMastery(st.mastery[lessonId] ?? 0, "correct"),
+          },
+        };
         st = tx(st, "ADVANCE_CHUNK");
         st = emitTutor(st, chunk.correctFeedback);
         return advance(st, course);
       }
 
-      // Wrong: hint and re-ask (no model yet; remediation loop comes in MVP 10).
+      // Wrong: lower mastery, count the mistake, hint and re-ask.
+      st = {
+        ...st,
+        mastery: {
+          ...st.mastery,
+          [lessonId]: updateMastery(st.mastery[lessonId] ?? 0, "wrong"),
+        },
+        mistakes: { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 },
+      };
       st = tx(st, "GIVE_HINT");
       st = emitTutor(st, chunk.hint);
       st = tx(st, "ASK_MICRO_QUIZ");
       return { ...st, awaitingAnswer: true };
     }
+
     default:
       return s;
   }
+}
+
+/** Extract the persistable progress from runtime state. */
+export function toSavedProgress(course: CoursePack, s: TutorRuntimeState): SavedProgress {
+  return {
+    programId: course.programId,
+    moduleIndex: s.moduleIndex,
+    lessonIndex: s.lessonIndex,
+    chunkIndex: s.chunkIndex,
+    mastery: s.mastery,
+    mistakes: s.mistakes,
+  };
 }
 
 /** Bind a course pack to the reducer for use with useReducer. */

@@ -40,6 +40,18 @@
   opacity: 0.8;
 }
 
+.debugReset {
+  align-self: flex-start;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .messages {
   flex: 1 1 auto;
   min-height: 0;

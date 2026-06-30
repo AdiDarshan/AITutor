@@ -10,8 +10,8 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 3 done (explicit tutor state machine, verified). Next: MVP 4 — student
-mastery model. (MVP 0 Vercel deploy still pending — needs your account.)
+**Current focus:** MVP 4 done (mastery model + localStorage persistence, verified). Next: MVP 5
+— quick action UI. (MVP 0 Vercel deploy still pending — needs your account.)
 
 ---
 
@@ -44,8 +44,12 @@ mastery model. (MVP 0 Vercel deploy still pending — needs your account.)
   - [x] `app/tutor/tutorMachine.ts` — pure reducer driving the chat through the machine
   - [x] `LessonPlayer` refactored to `useReducer`; ad-hoc state removed
   - [x] Debug chip shows live state + position + transition history; tsc clean
-- [ ] **MVP 4 — Student mastery model.** Local `StudentState` (program/module/lesson), mastery
+- [x] **MVP 4 — Student mastery model.** Local `StudentState` (program/module/lesson), mastery
   update fn keyed by lesson, localStorage persistence across refresh; advance uses mastery.
+  - [x] `app/tutor/mastery.ts` — `updateMastery` (+0.15/+0.05/−0.1, clamped) + threshold helper
+  - [x] `app/storage/progressStore.ts` — load/save/clear in localStorage (`course-tutor:progress:py101`)
+  - [x] Reducer tracks mastery + mistakes; RESTORE / RESET actions; `toSavedProgress`
+  - [x] Player restores on mount, persists on change; debug panel shows mastery/mistakes + reset
 - [ ] **MVP 5 — Quick action UI.** Structured `StudentEvent` buttons (understand/confused/
   example/quiz/ask/continue) driving the state machine; free-text quiz answers still work.
 

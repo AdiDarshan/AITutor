@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { CoursePack } from "../content/types";
-import { buildInitialState, makeTutorReducer } from "../tutor/tutorMachine";
+import {
+  buildInitialState,
+  makeTutorReducer,
+  toSavedProgress,
+} from "../tutor/tutorMachine";
+import { clearProgress, loadProgress, saveProgress } from "../storage/progressStore";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
 import Composer from "./Composer";
@@ -12,12 +17,35 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
   const reducer = useMemo(() => makeTutorReducer(course), [course]);
   const [state, dispatch] = useReducer(reducer, course, buildInitialState);
   const [showDebug, setShowDebug] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore saved progress once, on mount (client only).
+  useEffect(() => {
+    const saved = loadProgress(course.programId);
+    if (saved) dispatch({ type: "RESTORE", saved });
+    setHydrated(true);
+  }, [course.programId]);
+
+  // Persist progress after every change (but not before the restore above).
+  useEffect(() => {
+    if (!hydrated) return;
+    saveProgress(toSavedProgress(course, state));
+  }, [state, hydrated, course]);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = messagesRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [state.messages]);
+
+  function resetProgress() {
+    clearProgress(course.programId);
+    dispatch({ type: "RESET" });
+  }
+
+  const lessonId = course.modules[state.moduleIndex].lessons[state.lessonIndex].lessonId;
+  const mastery = state.mastery[lessonId] ?? 0;
+  const mistakes = state.mistakes[lessonId] ?? 0;
 
   return (
     <div className={styles.chat}>
@@ -27,7 +55,7 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
           type="button"
           onClick={() => setShowDebug((v) => !v)}
         >
-          🐞 {state.machineState}
+          🐞 {state.machineState} · mastery {mastery.toFixed(2)}
         </button>
         {showDebug && (
           <div className={styles.debugPanel}>
@@ -35,8 +63,14 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
               module {state.moduleIndex + 1}/{course.modules.length} · lesson{" "}
               {state.lessonIndex + 1} · chunk {state.chunkIndex + 1}
             </div>
-            <div>awaiting answer: {state.awaitingAnswer ? "yes" : "no"}</div>
+            <div>
+              awaiting answer: {state.awaitingAnswer ? "yes" : "no"} · mastery{" "}
+              {mastery.toFixed(2)} · mistakes {mistakes}
+            </div>
             <div className={styles.debugHistory}>{state.history.join(" → ")}</div>
+            <button className={styles.debugReset} type="button" onClick={resetProgress}>
+              reset progress
+            </button>
           </div>
         )}
       </div>

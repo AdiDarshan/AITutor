@@ -10,20 +10,20 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 5 done (quick action UI, verified). Next: MVP 6 — WebLLM client-only
-speaker (first LLM connection). (MVP 0 Vercel deploy still pending — needs your account.)
+**Current focus:** MVP 6 done (WebLLM speaker, Qwen2.5-1.5B, grounding guard, rebuilt PY101
+content; verified in browser). Next: MVP 7 — model status & fallbacks.
 
 ---
 
 ## Phase 1 — Guided tutor engine (no AI)
 
-- [~] **MVP 0 — Skeleton + Vercel deploy.** Next.js + TS app; root route is the lesson view
+- [x] **MVP 0 — Skeleton + Vercel deploy.** Next.js + TS app; root route is the lesson view
   (no landing page) with placeholder tutor message + quiz card. Builds, deploys, works on
   mobile width.
   - [x] Next.js (App Router) + TypeScript scaffold, CSS Modules
   - [x] Lesson view at `/` with `TutorMessage` + `QuizCard` placeholders
   - [x] `npm run build` passes; serves 200 with content locally
-  - [ ] Deployed to Vercel (needs your Vercel account)
+  - [x] Deployed to Vercel — live at ai-tutor-5xyz.vercel.app (auto-deploys on push to main)
 - [x] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
   lesson; flow: explain → check question → submit → fixed feedback → next chunk. ≥2 chunks,
   deterministic.
@@ -59,8 +59,14 @@ speaker (first LLM connection). (MVP 0 Vercel deploy still pending — needs you
 
 ## Phase 2 — Add the local model (WebLLM)
 
-- [ ] **MVP 6 — WebLLM client-only speaker.** Client-only WebLLM; `LLMClient` interface +
-  `WebLLMClient`; rewrite approved explanations into natural phrasing. No server import.
+- [x] **MVP 6 — WebLLM client-only speaker.** Client-only WebLLM; `LLMClient` interface +
+  `WebLLMClient`; teach approved explanations in natural language. No server import.
+  - [x] `app/llm/LLMClient.ts` interface + `WebLLMClient.ts` (lazy dynamic import, singleton)
+  - [x] Model: Qwen2.5-1.5B-Instruct (1B hallucinated); `speakerPrompt` teaches the material simply
+  - [x] `useSpeaker` hook + `ModelStatus` bar (enable / loading% / ready / unsupported / failed)
+  - [x] Single bubble: approved text → "writing…" → generated; `grounding.ts` guard falls back on drift
+  - [x] Rebuilt PY101 lesson (8 chunks from zero context → write+run a print() script)
+  - [x] Visible "Start over" button; tsc + build clean; verified in browser (WebGPU)
 - [ ] **MVP 7 — Model status + fallbacks.** Model status states + UI; Mode A (AI) / B
   (static) / C (lesson-only). Unsupported/failed devices still get a working lesson.
 

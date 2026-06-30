@@ -9,10 +9,12 @@ import {
 } from "../tutor/tutorMachine";
 import { clearProgress, loadProgress, saveProgress } from "../storage/progressStore";
 import type { StudentEvent } from "../tutor/events";
+import { useSpeaker } from "../llm/useSpeaker";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
 import QuickActions from "./QuickActions";
 import Composer from "./Composer";
+import ModelStatus from "./ModelStatus";
 import styles from "./LessonPlayer.module.css";
 
 export default function LessonPlayer({ course }: { course: CoursePack }) {
@@ -21,6 +23,12 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
   const [showDebug, setShowDebug] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [askMode, setAskMode] = useState(false);
+
+  // Local LLM speaker (rephrases approved explanations when available).
+  const speaker = useSpeaker();
+  // Per-message generation state: "pending" | "failed" | { text }.
+  const [gen, setGen] = useState<Record<string, "pending" | "failed" | { text: string }>>({});
+  const startedRef = useRef<Set<string>>(new Set());
 
   // Dispatch a structured student event (logged in development).
   function send(event: StudentEvent) {
@@ -49,8 +57,35 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [state.messages]);
 
-  function resetProgress() {
+  // When the model is ready, generate the tutor phrasing for each approved
+  // explanation (strictly from its content). Each message is generated once.
+  useEffect(() => {
+    if (speaker.status !== "ready") return;
+    for (const m of state.messages) {
+      if (m.role !== "tutor" || !m.speakable || startedRef.current.has(m.id)) continue;
+      startedRef.current.add(m.id);
+      setGen((prev) => ({ ...prev, [m.id]: "pending" }));
+      const approved = m.text;
+      speaker.rephrase(approved).then((out) => {
+        setGen((prev) => ({ ...prev, [m.id]: out ? { text: out } : "failed" }));
+      });
+    }
+  }, [state.messages, speaker.status, speaker]);
+
+  // What to show for a tutor message's text (single bubble, no duplicates).
+  function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {
+    if (!speakable || speaker.status !== "ready") return approved; // off/loading -> approved
+    const g = gen[id];
+    if (g && typeof g === "object") return g.text; // generated
+    if (g === "failed") return approved; // fallback on failure
+    return null; // pending -> show "writing…" placeholder
+  }
+
+  function startOver() {
     clearProgress(course.programId);
+    startedRef.current.clear();
+    setGen({});
+    setAskMode(false);
     dispatch({ type: "RESET" });
   }
 
@@ -60,14 +95,26 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
 
   return (
     <div className={styles.chat}>
+      <ModelStatus
+        status={speaker.status}
+        supported={speaker.supported}
+        progress={speaker.progress}
+        onEnable={speaker.enable}
+      />
+
       <div className={styles.debugBar}>
-        <button
-          className={styles.debugChip}
-          type="button"
-          onClick={() => setShowDebug((v) => !v)}
-        >
-          🐞 {state.machineState} · mastery {mastery.toFixed(2)}
-        </button>
+        <div className={styles.debugRow}>
+          <button className={styles.startOver} type="button" onClick={startOver}>
+            ↺ Start over
+          </button>
+          <button
+            className={styles.debugChip}
+            type="button"
+            onClick={() => setShowDebug((v) => !v)}
+          >
+            🐞 {state.machineState} · mastery {mastery.toFixed(2)}
+          </button>
+        </div>
         {showDebug && (
           <div className={styles.debugPanel}>
             <div>
@@ -79,24 +126,29 @@ export default function LessonPlayer({ course }: { course: CoursePack }) {
               {mastery.toFixed(2)} · mistakes {mistakes}
             </div>
             <div className={styles.debugHistory}>{state.history.join(" → ")}</div>
-            <button className={styles.debugReset} type="button" onClick={resetProgress}>
-              reset progress
-            </button>
           </div>
         )}
       </div>
 
       <div className={styles.messages} ref={messagesRef}>
-        {state.messages.map((m) =>
-          m.role === "tutor" ? (
+        {state.messages.map((m) => {
+          if (m.role !== "tutor") {
+            return <StudentMessage key={m.id}>{m.text}</StudentMessage>;
+          }
+          const text = tutorText(m.id, m.speakable, m.text);
+          return (
             <TutorMessage key={m.id}>
-              {m.text}
-              {m.example && <pre className={styles.example}>{m.example}</pre>}
+              {text === null ? (
+                <span className={styles.generating}>✨ writing…</span>
+              ) : (
+                <>
+                  {text}
+                  {m.example && <pre className={styles.example}>{m.example}</pre>}
+                </>
+              )}
             </TutorMessage>
-          ) : (
-            <StudentMessage key={m.id}>{m.text}</StudentMessage>
-          ),
-        )}
+          );
+        })}
       </div>
 
       <QuickActions

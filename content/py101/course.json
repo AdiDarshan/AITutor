@@ -21,53 +21,98 @@
           "type": "standard",
           "order": 1,
           "prerequisites": [],
-          "learning_goal": "Student can write a program that prints text with print().",
+          "learning_goal": "Write and execute a simple Python script that shows text on the screen using the print() function.",
           "lesson_chunks": [
             {
-              "chunk_id": "print_intro",
-              "goal": "Introduce print() and how a program runs top to bottom.",
-              "approved_explanation": "A Python program runs from top to bottom, one line at a time. To show something on the screen, you use print(). Whatever you want to display goes inside the parentheses.",
-              "simple_example": "print(\"Hello, world!\")   →   Hello, world!",
-              "check_question": "Which built-in function displays text on the screen in Python?",
+              "chunk_id": "what_is_python",
+              "goal": "Explain what Python and programming are, from zero.",
+              "approved_explanation": "A computer cannot think for itself — it only does exactly what you tell it. Telling a computer what to do, step by step, is called programming. Python is a programming language: a set of words and rules for writing those instructions. People like Python because it reads almost like plain English, which makes it a great first language to learn.",
+              "check_question": "Is Python a language we use to give a computer instructions? (yes / no)",
+              "expected_answer": "yes",
+              "accepted_answers": ["yes", "yep", "yeah"],
+              "correct_feedback": "Exactly — Python is how we give the computer instructions.",
+              "hint": "Python is the language we write our instructions in — so, yes.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "commands_and_programs",
+              "goal": "Introduce the ideas of a command, a program, and running top to bottom.",
+              "approved_explanation": "In Python you write instructions, and each single instruction is called a command. You normally write one command per line. The computer carries them out in order, starting at the top and moving down, one line at a time. A group of commands saved together is called a program.",
+              "check_question": "What do we call a single instruction you give the computer in Python?",
+              "expected_answer": "command",
+              "accepted_answers": ["command", "a command", "instruction", "an instruction"],
+              "correct_feedback": "Right — one instruction is a command, and the computer runs them top to bottom.",
+              "hint": "Another word for one instruction; it starts with the letter 'c'.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "meet_print",
+              "goal": "Introduce print() as the first command, which shows text on screen.",
+              "approved_explanation": "Your very first command is print(). It tells the computer to show something on the screen. You write the word print, then a pair of parentheses ( ), and the message you want to show goes inside those parentheses.",
+              "simple_example": "print(\"Hello!\")",
+              "check_question": "Which command tells the computer to show text on the screen?",
               "expected_answer": "print",
               "accepted_answers": ["print"],
-              "correct_feedback": "Exactly — print() is how you show output.",
-              "hint": "It's a 5-letter word, and you call it with parentheses: ____().",
+              "correct_feedback": "Yes — print() is the command that shows things on the screen.",
+              "hint": "It's the word you write just before the parentheses: ____( ).",
               "source_refs": ["PY101 Week 1, Writing your first program"]
             },
             {
-              "chunk_id": "print_string",
-              "goal": "Introduce strings and that print shows the text inside the quotes.",
-              "approved_explanation": "The text you want to print goes inside quotes. Text in quotes is called a string. The quotes tell Python where the text starts and ends.",
-              "simple_example": "print(\"Python\")   →   Python",
-              "check_question": "What does print(\"Hello\") display on the screen?",
-              "expected_answer": "Hello",
-              "accepted_answers": ["hello"],
-              "correct_feedback": "Right — the text inside the quotes.",
-              "hint": "Python prints what's between the quotes — and only that.",
+              "chunk_id": "text_in_quotes",
+              "goal": "Introduce strings: the message goes inside quotation marks.",
+              "approved_explanation": "The message you want to show goes inside quotation marks. A piece of text inside quotes is called a string. The quotes tell Python where your text starts and where it ends.",
+              "simple_example": "print(\"Hello!\")   shows:   Hello!",
+              "check_question": "What does print(\"Hi\") show on the screen?",
+              "expected_answer": "Hi",
+              "accepted_answers": ["Hi"],
+              "correct_feedback": "Right — it shows the text that is inside the quotes.",
+              "hint": "Python shows exactly what is written between the quotation marks.",
               "source_refs": ["PY101 Week 1, Writing your first program"]
             },
             {
-              "chunk_id": "quotes_not_shown",
-              "goal": "Clarify that quotation marks are markers and do not appear in output.",
-              "approved_explanation": "Notice the quotation marks never appear in the output — they are just markers that tell Python where the string begins and ends.",
-              "simple_example": "print(\"Python\")   →   Python   (no quotes in the result)",
-              "check_question": "Do the quotation marks themselves appear in the printed output? (yes / no)",
+              "chunk_id": "quotes_are_markers",
+              "goal": "Clarify that quotation marks never appear in the output.",
+              "approved_explanation": "The quotation marks are only markers for Python. They tell it where the text begins and ends, but they themselves never appear in what is shown on the screen.",
+              "simple_example": "print(\"Python\")   shows:   Python",
+              "check_question": "Do the quotation marks appear on the screen when the program runs? (yes / no)",
               "expected_answer": "no",
               "accepted_answers": ["no", "nope"],
-              "correct_feedback": "Correct — the quotes are markers, not content.",
-              "hint": "Look at the example: print(\"Python\") shows Python, with no quotes around it.",
+              "correct_feedback": "Correct — the quotes are just markers and are never shown.",
+              "hint": "Look at the example: the quotes are gone in what gets shown.",
               "source_refs": ["PY101 Week 1, Writing your first program"]
             },
             {
-              "chunk_id": "first_program",
-              "goal": "Have the student write their first working line of code.",
-              "approved_explanation": "Now put it together and write your first line of code: the function name, parentheses, and your text in quotes inside them.",
-              "check_question": "Write a line of code that prints the word:  Python",
+              "chunk_id": "write_the_line",
+              "goal": "Have the student write a full print() command.",
+              "approved_explanation": "Now you can write a full command: write print, then parentheses, and put your text in quotes inside the parentheses. That single line is a complete instruction for the computer.",
+              "check_question": "Write a command that shows the word:  Python",
               "expected_answer": "print(\"Python\")",
-              "accepted_answers": ["print(\"Python\")", "print Python"],
-              "correct_feedback": "🎉 That's a working Python program!",
-              "hint": "Use print(), and put Python in quotes inside the parentheses: print(\"...\").",
+              "accepted_answers": ["print(\"Python\")", "print python"],
+              "correct_feedback": "🎉 That's a real line of Python!",
+              "hint": "Write print, then (\"Python\") — your text in quotes inside the parentheses.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "run_the_program",
+              "goal": "Explain what it means to run (execute) the program.",
+              "approved_explanation": "Writing the command is the first step. To see it work, you run the program, which is also called executing it. When you run it, Python reads your command and shows the text on the screen.",
+              "simple_example": "Run:   print(\"Python\")\nOutput:   Python",
+              "check_question": "When you run print(\"Hello\"), what appears on the screen?",
+              "expected_answer": "Hello",
+              "accepted_answers": ["Hello"],
+              "correct_feedback": "Exactly — running the command shows the text on the screen.",
+              "hint": "Running it shows the text inside the quotes — without the quotes.",
+              "source_refs": ["PY101 Week 1, Writing your first program"]
+            },
+            {
+              "chunk_id": "first_script",
+              "goal": "Combine writing and running into one complete first script.",
+              "approved_explanation": "You now know the whole flow: write a print command with your message in quotes, then run the program to see the output. Putting those two steps together is your first complete Python script.",
+              "check_question": "Write a command that, when you run it, shows:  I love Python",
+              "expected_answer": "print(\"I love Python\")",
+              "accepted_answers": ["print(\"I love Python\")", "print i love python"],
+              "correct_feedback": "🎉 You can write and run a Python script — nicely done!",
+              "hint": "Use print(...) with your whole message in quotes: print(\"I love Python\").",
               "source_refs": ["PY101 Week 1, Writing your first program"]
             }
           ],
@@ -76,17 +121,17 @@
             {
               "mistake_id": "missing_parentheses",
               "description": "Student writes print \"Hello\" without parentheses.",
-              "remediation": "Remind that print is a function call: the text goes inside ()."
+              "remediation": "Remind that print is a command that needs (): the message goes inside them."
             },
             {
               "mistake_id": "missing_quotes",
               "description": "Student writes print(Hello) without quotes around the text.",
-              "remediation": "Text must be in quotes so Python treats it as a string."
+              "remediation": "Text must be inside quotes so Python treats it as a string."
             },
             {
               "mistake_id": "quotes_in_output",
-              "description": "Student expects the quotation marks to appear in the output.",
-              "remediation": "Show that the quotes are markers and are not printed."
+              "description": "Student expects the quotation marks to appear on screen.",
+              "remediation": "Show that the quotes are markers and are not part of the output."
             },
             {
               "mistake_id": "misspelled_print",

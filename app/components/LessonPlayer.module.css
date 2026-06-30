@@ -10,6 +10,28 @@
   margin-bottom: 8px;
 }
 
+.debugRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.startOver {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.startOver:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .debugChip {
   border: 1px solid var(--border);
   background: var(--surface);
@@ -40,18 +62,6 @@
   opacity: 0.8;
 }
 
-.debugReset {
-  align-self: flex-start;
-  margin-top: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
 .messages {
   flex: 1 1 auto;
   min-height: 0;
@@ -60,6 +70,11 @@
   flex-direction: column;
   gap: 16px;
   padding: 4px 0 12px;
+}
+
+.generating {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .example {

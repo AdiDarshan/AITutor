@@ -9,6 +9,8 @@ export interface ChatMessage {
   role: "tutor" | "student";
   text: string;
   example?: string;
+  /** True for approved-explanation messages the speaker may rephrase. */
+  speakable?: boolean;
 }
 
 export interface TutorRuntimeState {
@@ -58,10 +60,18 @@ function tx(s: TutorRuntimeState, to: TutorState): TutorRuntimeState {
   return { ...s, machineState: next, history: [...s.history, next] };
 }
 
-function emitTutor(s: TutorRuntimeState, text: string, example?: string): TutorRuntimeState {
+function emitTutor(
+  s: TutorRuntimeState,
+  text: string,
+  example?: string,
+  speakable?: boolean,
+): TutorRuntimeState {
   return {
     ...s,
-    messages: [...s.messages, { id: `m${s.messages.length}`, role: "tutor", text, example }],
+    messages: [
+      ...s.messages,
+      { id: `m${s.messages.length}`, role: "tutor", text, example, speakable },
+    ],
   };
 }
 
@@ -76,7 +86,7 @@ function emitStudent(s: TutorRuntimeState, text: string): TutorRuntimeState {
 function presentChunk(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
   const chunk = currentChunk(course, s);
   s = tx(s, "EXPLAIN_CHUNK");
-  s = emitTutor(s, chunk.explanation, chunk.example);
+  s = emitTutor(s, chunk.explanation, chunk.example, true);
   s = tx(s, "ASK_UNDERSTANDING");
   s = tx(s, "ASK_MICRO_QUIZ");
   s = emitTutor(s, chunk.checkQuestion);
@@ -188,7 +198,7 @@ function reduce(
       if (!s.awaitingAnswer || s.finished) return s;
       const chunk = currentChunk(course, s);
       let st = emitTutor(s, "No problem — here's that idea again:");
-      return emitTutor(st, chunk.explanation, chunk.example);
+      return emitTutor(st, chunk.explanation, chunk.example, true);
     }
 
     case "REQUEST_EXAMPLE": {

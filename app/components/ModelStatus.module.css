@@ -1,0 +1,27 @@
+.bar {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ready {
+  border-color: #b6e2c5;
+  background: #e7f6ec;
+  color: #14532d;
+}
+
+.btn {
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}

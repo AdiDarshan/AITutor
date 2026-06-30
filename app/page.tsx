@@ -1,24 +1,20 @@
-import TutorMessage from "./components/TutorMessage";
-import QuizCard from "./components/QuizCard";
+import LessonPlayer from "./components/LessonPlayer";
+import { writingYourFirstProgram } from "./lessonContent";
 import styles from "./page.module.css";
 
 export default function LessonPage() {
+  const lesson = writingYourFirstProgram;
+
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <p className={styles.course}>PY101 · Week 1 — Writing your first program</p>
-        <h1 className={styles.concept}>Writing your first program</h1>
+        <p className={styles.course}>
+          {lesson.program} · {lesson.module}
+        </p>
+        <h1 className={styles.concept}>{lesson.title}</h1>
       </header>
 
-      <section className={styles.flow}>
-        <TutorMessage>
-          Welcome to PY101! We&apos;ll learn Python one small step at a time. A program runs
-          top to bottom, and <code>print()</code> shows text on the screen — the text goes
-          inside the parentheses, in quotes.
-        </TutorMessage>
-
-        <QuizCard question="Which function displays text on screen in Python?" />
-      </section>
+      <LessonPlayer lesson={lesson} />
     </main>
   );
 }

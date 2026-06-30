@@ -10,7 +10,8 @@ weekly_review, exam, retake_review.
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 0 — app scaffolded & building locally; Vercel deploy pending (needs your account).
+**Current focus:** MVP 1 — interactive no-AI lesson player built & building locally; verify in
+browser, then start MVP 2. (MVP 0 Vercel deploy still pending — needs your account.)
 
 ---
 
@@ -23,9 +24,14 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
   - [x] Lesson view at `/` with `TutorMessage` + `QuizCard` placeholders
   - [x] `npm run build` passes; serves 200 with content locally
   - [ ] Deployed to Vercel (needs your Vercel account)
-- [ ] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
+- [~] **MVP 1 — No-AI lesson player.** Hardcoded PY101 Week 1 "Writing your first program"
   lesson; flow: explain → check question → submit → fixed feedback → next chunk. ≥2 chunks,
   deterministic.
+  - [x] 4-chunk hardcoded lesson (`app/lessonContent.ts`)
+  - [x] Chat UI: `LessonPlayer` (message list) + `TutorMessage` / `StudentMessage` / `Composer`
+  - [x] Deterministic string matching, retry on wrong; auto-advance after correct (no Continue button)
+  - [x] Advance gated on correct answer; build passes; initial render verified
+  - [ ] Manual click-through confirmed in browser
 - [ ] **MVP 2 — Course Pack JSON + Zod.** Move hardcoded content into validated JSON
   (program / module / lesson / lesson-chunk shapes, incl. lesson `type`). Bad JSON fails
   validation clearly.

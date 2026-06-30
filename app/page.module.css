@@ -1,11 +1,15 @@
 .main {
   max-width: 720px;
   margin: 0 auto;
-  padding: 32px 20px 64px;
+  padding: 0 20px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  margin-bottom: 28px;
+  flex: 0 0 auto;
+  margin: 24px 0 16px;
 }
 
 .course {
@@ -21,10 +25,4 @@
   margin: 4px 0 0;
   font-size: 28px;
   font-weight: 700;
-}
-
-.flow {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }

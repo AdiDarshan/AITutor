@@ -1,0 +1,16 @@
+.row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 80%;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  border-bottom-right-radius: 4px;
+  padding: 10px 14px;
+  font-size: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

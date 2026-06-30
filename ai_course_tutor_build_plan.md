@@ -662,6 +662,14 @@ type StudentEvent =
   | { type: "SUBMIT_ANSWER"; text: string };
 ```
 
+### UX decision (chat-style)
+
+The tutor is presented as a **message chat** (tutor on the left, student on the right, a single
+composer at the bottom). The normal path **auto-advances**: after a correct answer the tutor
+acknowledges and the next part streams in as new messages — there is **no "Continue" button on
+the answer path**. A "Continue"/"Go slower" quick action is reserved only for explanation-only
+beats and pacing, not for moving past a check question.
+
 ### Do Not Build Yet
 
 - No AI classification of free text.

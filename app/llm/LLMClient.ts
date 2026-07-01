@@ -10,6 +10,8 @@ export type ModelStatus =
 export interface GenerateOptions {
   maxTokens?: number;
   temperature?: number;
+  /** Tag for debug logging (e.g. "speaker", "grade", "question"). */
+  label?: string;
 }
 
 export type ProgressCallback = (text: string, progress: number) => void;

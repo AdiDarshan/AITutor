@@ -70,6 +70,7 @@ export function useSpeaker(): Speaker {
       const out = await client.generate(speakerPrompt(approved), {
         maxTokens: 200,
         temperature: 0.3,
+        label: "speaker",
       });
       return groundOrNull(approved, out);
     } catch {
@@ -85,6 +86,7 @@ export function useSpeaker(): Speaker {
       const out = await client.generate(gradingPrompt(input), {
         maxTokens: 200,
         temperature: 0,
+        label: "grade",
       });
       return parseGrade(out);
     } catch {
@@ -100,6 +102,7 @@ export function useSpeaker(): Speaker {
         const out = await client.generate(questionAnswerPrompt(input), {
           maxTokens: 220,
           temperature: 0.3,
+          label: "question",
         });
         return out.trim() || null;
       } catch {

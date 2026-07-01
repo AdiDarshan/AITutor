@@ -58,12 +58,26 @@ class WebLLMClient implements LLMClient {
 
   async generate(prompt: string, opts?: GenerateOptions): Promise<string> {
     if (!this.engine) throw new Error("WebLLM engine not ready");
+    const label = opts?.label ?? "llm";
+
+    if (process.env.NODE_ENV !== "production") {
+      console.groupCollapsed(`%c[LLM ${label}] prompt`, "color:#2f6fed;font-weight:bold");
+      console.log(prompt);
+      console.groupEnd();
+    }
+
     const res = await this.engine.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       temperature: opts?.temperature ?? 0.3,
       max_tokens: opts?.maxTokens ?? 200,
     });
-    return res.choices[0]?.message?.content?.trim() ?? "";
+    const out = res.choices[0]?.message?.content?.trim() ?? "";
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`%c[LLM ${label}] response`, "color:#14532d;font-weight:bold", out);
+    }
+
+    return out;
   }
 }
 

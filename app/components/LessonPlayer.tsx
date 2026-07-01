@@ -226,8 +226,9 @@ export default function LessonPlayer({
       <header className={styles.lessonHeader}>
         <div className={styles.headerRow}>
           <button className={styles.back} type="button" onClick={onExit}>
-            ← Lessons
+            ← All lessons
           </button>
+          <div className={styles.headerSpacer} />
           <button className={styles.startOver} type="button" onClick={restartLesson}>
             ↺ Restart
           </button>

@@ -15,19 +15,26 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
   margin-bottom: 8px;
+}
+
+.headerSpacer {
+  flex: 1 1 auto;
 }
 
 .back {
   border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.back:hover {
+  opacity: 0.9;
 }
 
 .startOver {

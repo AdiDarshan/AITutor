@@ -30,6 +30,12 @@
               "check_question": "Is Python a language we use to give a computer instructions? (yes / no)",
               "expected_answer": "yes",
               "accepted_answers": ["yes", "yep", "yeah"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["no", "nope", "nah"],
+                  "hint": "Actually yes — Python is exactly that: a language for giving a computer instructions."
+                }
+              ],
               "correct_feedback": "Exactly — Python is how we give the computer instructions.",
               "hint": "Python is the language we write our instructions in — so, yes.",
               "source_refs": ["PY101 Week 1, Writing your first program"]

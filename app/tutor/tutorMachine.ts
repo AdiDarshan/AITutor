@@ -12,6 +12,8 @@ export interface ChatMessage {
   example?: string;
   /** True for approved-explanation messages the speaker may rephrase. */
   speakable?: boolean;
+  /** Source labels to show under a retrieval-grounded answer. */
+  sources?: string[];
 }
 
 export interface TutorRuntimeState {
@@ -44,7 +46,7 @@ export interface TutorRuntimeState {
 export type TutorAction =
   | StudentEvent
   | { type: "APPLY_GRADE"; modelGrade: GradeResult | null }
-  | { type: "ANSWER_QUESTION"; text: string }
+  | { type: "ANSWER_QUESTION"; text: string; sources: string[] }
   | { type: "RESTORE"; saved: SavedProgress }
   | { type: "RESET" };
 
@@ -88,12 +90,13 @@ function emitTutor(
   text: string,
   example?: string,
   speakable?: boolean,
+  sources?: string[],
 ): TutorRuntimeState {
   return {
     ...s,
     messages: [
       ...s.messages,
-      { id: `m${s.messages.length}`, role: "tutor", text, example, speakable },
+      { id: `m${s.messages.length}`, role: "tutor", text, example, speakable, sources },
     ],
   };
 }
@@ -252,7 +255,13 @@ function reduce(
 
     case "ANSWER_QUESTION": {
       if (!s.answeringQuestion) return s;
-      let st = emitTutor(s, action.text);
+      let st = emitTutor(
+        s,
+        action.text,
+        undefined,
+        false,
+        action.sources.length ? action.sources : undefined,
+      );
       // Return to exactly where we were in the lesson.
       st = emitTutor(st, `Back to where we were — ${currentChunk(course, s).checkQuestion}`);
       return { ...st, answeringQuestion: false, pendingQuestion: null };
@@ -273,13 +282,17 @@ function reduce(
       const lessonId = currentLesson(course, s).lessonId;
       const chunk = currentChunk(course, s);
 
-      // Decide the outcome. An exact deterministic match always counts as correct
-      // (the model can never reject a clearly-right answer). Otherwise trust the
-      // model when confident; fall back to "wrong" if the model gave nothing.
+      // Decide the outcome, with deterministic checks taking priority over the model:
+      //  - an exact accepted match is always correct (model can't reject it),
+      //  - a known wrong answer is always wrong (a flaky model can't pass it),
+      //  - otherwise trust the model when confident; else fall back to "wrong".
       // The APP decides advancement, not the model.
+      const knownWrongHint = matchWrongHint(chunk.commonWrongAnswers, answer);
       let outcome: "correct" | "partial" | "wrong";
       if (isCorrect(chunk.accepted, answer)) {
         outcome = "correct";
+      } else if (knownWrongHint !== null) {
+        outcome = "wrong";
       } else if (action.modelGrade) {
         const g = action.modelGrade;
         if (g.grade === "correct" && g.confidence >= 0.7) outcome = "correct";
@@ -318,7 +331,6 @@ function reduce(
             ? { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 }
             : st.mistakes,
       };
-      const specific = matchWrongHint(chunk.commonWrongAnswers, answer);
 
       // First slip → a quick hint. Repeated slips → remediate: slow down,
       // re-teach the idea, then re-ask.
@@ -326,14 +338,14 @@ function reduce(
         st = tx(st, "REMEDIATE");
         st = emitTutor(st, "No worries — let's slow down and go over this again.");
         st = emitTutor(st, chunk.explanation, chunk.example, true);
-        if (specific) st = emitTutor(st, specific);
+        if (knownWrongHint) st = emitTutor(st, knownWrongHint);
         st = tx(st, "ASK_MICRO_QUIZ");
         st = emitTutor(st, chunk.checkQuestion);
         return { ...st, awaitingAnswer: true };
       }
 
       st = tx(st, "GIVE_HINT");
-      st = emitTutor(st, specific ?? chunk.hint);
+      st = emitTutor(st, knownWrongHint ?? chunk.hint);
       st = tx(st, "ASK_MICRO_QUIZ");
       return { ...st, awaitingAnswer: true };
     }

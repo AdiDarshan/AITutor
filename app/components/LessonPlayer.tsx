@@ -10,10 +10,12 @@ import {
 import { clearProgress, loadProgress, saveProgress } from "../storage/progressStore";
 import type { StudentEvent } from "../tutor/events";
 import type { Speaker } from "../llm/useSpeaker";
+import { buildCorpus, keywordSearch } from "../retrieval/retrieval";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
 import QuickActions from "./QuickActions";
 import Composer from "./Composer";
+import SourceBadge from "./SourceBadge";
 import styles from "./LessonPlayer.module.css";
 
 export default function LessonPlayer({
@@ -97,28 +99,42 @@ export default function LessonPlayer({
       });
   }, [state.grading, state.pendingAnswer, state.moduleIndex, state.lessonIndex, state.chunkIndex, course, speaker]);
 
-  // Answer a paused-lesson question from the current chunk, then return.
+  // Retrieval corpus over all chunks in the course (rebuilt only when it changes).
+  const corpus = useMemo(() => buildCorpus(course), [course]);
+
+  // Answer a paused-lesson question: retrieve relevant chunks, answer from them
+  // (with source labels), then return to the lesson. Refuse if nothing matches.
   const answeringRef = useRef(false);
   useEffect(() => {
     if (!state.answeringQuestion || state.pendingQuestion == null || answeringRef.current)
       return;
     answeringRef.current = true;
-    const chunk =
-      course.modules[state.moduleIndex].lessons[state.lessonIndex].chunks[state.chunkIndex];
-    const fallback =
+    const question = state.pendingQuestion;
+    const refusal =
       "I don't have enough course material to answer that yet — let's keep going.";
+
+    const hits = keywordSearch(corpus, question, 3);
+    if (hits.length === 0) {
+      dispatch({ type: "ANSWER_QUESTION", text: refusal, sources: [] });
+      answeringRef.current = false;
+      return;
+    }
+
+    const material = hits.map((h) => `[Source: ${h.label}]\n${h.text}`).join("\n\n");
     speaker
-      .answerQuestion({
-        explanation: chunk.explanation,
-        example: chunk.example,
-        question: state.pendingQuestion,
-      })
-      .then((ans) => dispatch({ type: "ANSWER_QUESTION", text: ans ?? fallback }))
-      .catch(() => dispatch({ type: "ANSWER_QUESTION", text: fallback }))
+      .answerQuestion({ explanation: material, question })
+      .then((ans) =>
+        dispatch({
+          type: "ANSWER_QUESTION",
+          text: ans ?? refusal,
+          sources: ans ? hits.map((h) => h.label) : [],
+        }),
+      )
+      .catch(() => dispatch({ type: "ANSWER_QUESTION", text: refusal, sources: [] }))
       .finally(() => {
         answeringRef.current = false;
       });
-  }, [state.answeringQuestion, state.pendingQuestion, state.moduleIndex, state.lessonIndex, state.chunkIndex, course, speaker]);
+  }, [state.answeringQuestion, state.pendingQuestion, corpus, speaker]);
 
   // What to show for a tutor message's text (single bubble, no duplicates).
   function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {
@@ -185,6 +201,9 @@ export default function LessonPlayer({
                 <>
                   {text}
                   {m.example && <pre className={styles.example}>{m.example}</pre>}
+                  {m.sources && m.sources.length > 0 && (
+                    <SourceBadge sources={m.sources} />
+                  )}
                 </>
               )}
             </TutorMessage>

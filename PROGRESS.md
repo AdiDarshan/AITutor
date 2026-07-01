@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 11 built (question interrupt: answer from current chunk, return to lesson).
-Next: MVP 12 — simple retrieval (answer from any course chunk, with source labels).
+**Current focus:** MVP 12 built (keyword retrieval over all course chunks; answers cite sources;
+refuse if no match). Next: MVP 13 — verifier pass (regenerate/fallback on ungrounded output).
 
 ---
 
@@ -111,8 +111,12 @@ Next: MVP 12 — simple retrieval (answer from any course chunk, with source lab
   - [x] `useSpeaker.answerQuestion`; reducer ASK_QUESTION → answeringQuestion → ANSWER_QUESTION
   - [x] Teaching state machine untouched (interrupt); re-posts the check question on return
   - [x] "thinking…" indicator; input disabled while answering; tsc clean
-- [ ] **MVP 12 — Simple retrieval.** Source chunks + keyword search (top 3); answers include
+- [x] **MVP 12 — Simple retrieval.** Source chunks + keyword search (top 3); answers include
   source label; graceful "not enough course material" fallback.
+  - [x] `app/retrieval/retrieval.ts`: buildCorpus (all chunks) + keywordSearch (overlap, top 3)
+  - [x] QA now retrieves across the course, answers from retrieved material with `[Source:]` labels
+  - [x] `SourceBadge` renders source labels; empty match → refuse without a model call
+  - [x] No match handled; message `sources` field; tsc clean
 - [ ] **MVP 13 — Verifier pass.** Post-speaker verifier (JSON); fail once → regenerate shorter,
   fail twice → safe fallback. No infinite regen loops.
 

@@ -75,6 +75,28 @@ export default function LessonPlayer({
     }
   }, [state.messages, speaker.ready, speaker]);
 
+  // Grade a submitted answer with the model, then let the reducer decide.
+  const gradingRef = useRef(false);
+  useEffect(() => {
+    if (!state.grading || state.pendingAnswer == null || gradingRef.current) return;
+    gradingRef.current = true;
+    const chunk =
+      course.modules[state.moduleIndex].lessons[state.lessonIndex].chunks[state.chunkIndex];
+    speaker
+      .grade({
+        question: chunk.checkQuestion,
+        correctAnswer: chunk.expectedAnswer,
+        acceptedAnswers: chunk.accepted,
+        knownWrong: chunk.commonWrongAnswers.flatMap((w) => w.answers),
+        studentAnswer: state.pendingAnswer,
+      })
+      .then((modelGrade) => dispatch({ type: "APPLY_GRADE", modelGrade }))
+      .catch(() => dispatch({ type: "APPLY_GRADE", modelGrade: null }))
+      .finally(() => {
+        gradingRef.current = false;
+      });
+  }, [state.grading, state.pendingAnswer, state.moduleIndex, state.lessonIndex, state.chunkIndex, course, speaker]);
+
   // What to show for a tutor message's text (single bubble, no duplicates).
   function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {
     if (!speakable) return approved;
@@ -145,13 +167,16 @@ export default function LessonPlayer({
             </TutorMessage>
           );
         })}
+        {state.grading && (
+          <div className={styles.grading}>✨ checking your answer…</div>
+        )}
       </div>
 
       <QuickActions
         onEvent={send}
         onToggleAsk={() => setAskMode((v) => !v)}
         askMode={askMode}
-        disabled={state.finished || !state.awaitingAnswer}
+        disabled={state.finished || !state.awaitingAnswer || state.grading}
       />
 
       <Composer
@@ -163,13 +188,15 @@ export default function LessonPlayer({
             send({ type: "SUBMIT_ANSWER", text });
           }
         }}
-        disabled={state.finished}
+        disabled={state.finished || state.grading}
         placeholder={
           state.finished
             ? "Lesson complete 🎉"
-            : askMode
-              ? "Type your question…"
-              : "Type your answer…"
+            : state.grading
+              ? "Checking…"
+              : askMode
+                ? "Type your question…"
+                : "Type your answer…"
         }
       />
     </div>

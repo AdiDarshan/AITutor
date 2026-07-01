@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 8 done (deterministic known-wrong-answer hints). Next: MVP 9 — LLM quiz
-grading (the primary grader for free-text; deterministic stays as the fallback floor).
+**Current focus:** MVP 9 built (LLM grades free-text answers; app enforces advancement; exact
+match + deterministic are the floor). Needs browser test. Next: MVP 10 — remediation loop.
 
 ---
 
@@ -89,8 +89,13 @@ grading (the primary grader for free-text; deterministic stays as the fallback f
   - [x] `matchWrongHint` in reducer; specific hint on known-wrong, else generic `chunk.hint`
   - [x] Added misconception hints across all 3 courses (print command, quotes visible, wave
         length, blue scatters most, float/sink, ice density); tsc clean
-- [ ] **MVP 9 — LLM quiz grading.** JSON-only grading prompt against rubric; app enforces
+- [~] **MVP 9 — LLM quiz grading.** JSON-only grading prompt against rubric; app enforces
   `canAdvance = correct && confidence >= 0.7`; falls back to deterministic on JSON failure.
+  - [x] `app/llm/grade.ts`: gradingPrompt + safe JSON parse/validate (`GradeResult`)
+  - [x] `useSpeaker.grade()` (temp 0); async grading state in reducer (`grading`/`pendingAnswer`)
+  - [x] SUBMIT_ANSWER → grading → APPLY_GRADE; exact match always correct; else model if conf≥0.7
+  - [x] JSON/parse failure → deterministic fallback; "checking…" indicator; input disabled while grading
+  - [ ] Browser test: free-text/paraphrased answers graded correctly by the model
 - [ ] **MVP 10 — Remediation loop.** Detect misconception → gentle correction → hint/example
   → retry. Mistake counts stored; repeated mistakes slow the explanation.
 

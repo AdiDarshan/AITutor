@@ -1,6 +1,7 @@
 import type { CoursePack } from "../content/types";
 import type { SavedProgress } from "../storage/progressStore";
 import type { StudentEvent } from "./events";
+import type { GradeResult } from "../llm/grade";
 import { assertTransition, type TutorState } from "./stateMachine";
 import { updateMastery } from "./mastery";
 
@@ -21,6 +22,10 @@ export interface TutorRuntimeState {
   messages: ChatMessage[];
   /** True while waiting for the student to answer the current check question. */
   awaitingAnswer: boolean;
+  /** True while an answer is being graded (async LLM call in flight). */
+  grading: boolean;
+  /** The answer awaiting a grade. */
+  pendingAnswer: string | null;
   finished: boolean;
   /** Mastery score (0..1) per lessonId. */
   mastery: Record<string, number>;
@@ -32,6 +37,7 @@ export interface TutorRuntimeState {
 
 export type TutorAction =
   | StudentEvent
+  | { type: "APPLY_GRADE"; modelGrade: GradeResult | null }
   | { type: "RESTORE"; saved: SavedProgress }
   | { type: "RESET" };
 
@@ -117,6 +123,8 @@ function freshState(
     chunkIndex,
     messages: [],
     awaitingAnswer: false,
+    grading: false,
+    pendingAnswer: null,
     finished: false,
     mastery,
     mistakes,
@@ -235,14 +243,38 @@ function reduce(
 
     case "SUBMIT_ANSWER": {
       if (!s.awaitingAnswer || s.finished) return s;
+      // Record the answer and enter grading; the component calls the LLM grader
+      // and then dispatches APPLY_GRADE.
+      let st = emitStudent(s, action.text);
+      st = { ...st, awaitingAnswer: false, grading: true, pendingAnswer: action.text };
+      return tx(st, "EVALUATE_ANSWER");
+    }
+
+    case "APPLY_GRADE": {
+      if (s.machineState !== "EVALUATE_ANSWER" || s.pendingAnswer == null) return s;
+      const answer = s.pendingAnswer;
       const lessonId = currentLesson(course, s).lessonId;
       const chunk = currentChunk(course, s);
 
-      let st = emitStudent(s, action.text);
-      st = { ...st, awaitingAnswer: false };
-      st = tx(st, "EVALUATE_ANSWER");
+      // Decide the outcome. An exact deterministic match always counts as correct
+      // (the model can never reject a clearly-right answer). Otherwise trust the
+      // model when confident; fall back to "wrong" if the model gave nothing.
+      // The APP decides advancement, not the model.
+      let outcome: "correct" | "partial" | "wrong";
+      if (isCorrect(chunk.accepted, answer)) {
+        outcome = "correct";
+      } else if (action.modelGrade) {
+        const g = action.modelGrade;
+        if (g.grade === "correct" && g.confidence >= 0.7) outcome = "correct";
+        else if (g.grade === "partial") outcome = "partial";
+        else outcome = "wrong"; // wrong, or low-confidence "correct"
+      } else {
+        outcome = "wrong";
+      }
 
-      if (isCorrect(chunk.accepted, action.text)) {
+      let st: TutorRuntimeState = { ...s, grading: false, pendingAnswer: null };
+
+      if (outcome === "correct") {
         st = {
           ...st,
           mastery: {
@@ -255,18 +287,20 @@ function reduce(
         return advance(st, course);
       }
 
-      // Wrong: lower mastery, count the mistake, hint and re-ask.
+      // partial or wrong: update mastery, count wrongs, hint and re-ask.
       st = {
         ...st,
         mastery: {
           ...st.mastery,
-          [lessonId]: updateMastery(st.mastery[lessonId] ?? 0, "wrong"),
+          [lessonId]: updateMastery(st.mastery[lessonId] ?? 0, outcome),
         },
-        mistakes: { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 },
+        mistakes:
+          outcome === "wrong"
+            ? { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 }
+            : st.mistakes,
       };
       st = tx(st, "GIVE_HINT");
-      // Targeted hint for a known wrong answer, else the generic chunk hint.
-      const specific = matchWrongHint(chunk.commonWrongAnswers, action.text);
+      const specific = matchWrongHint(chunk.commonWrongAnswers, answer);
       st = emitTutor(st, specific ?? chunk.hint);
       st = tx(st, "ASK_MICRO_QUIZ");
       return { ...st, awaitingAnswer: true };

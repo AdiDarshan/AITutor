@@ -10,7 +10,8 @@ import {
 import { clearProgress, loadProgress, saveProgress } from "../storage/progressStore";
 import type { StudentEvent } from "../tutor/events";
 import type { Speaker } from "../llm/useSpeaker";
-import { buildCorpus, keywordSearch } from "../retrieval/retrieval";
+import { buildCorpus, hybridSearch, loadEmbeddings } from "../retrieval/retrieval";
+import { embedQuery } from "../retrieval/embedModel";
 import TutorMessage from "./TutorMessage";
 import StudentMessage from "./StudentMessage";
 import QuickActions from "./QuickActions";
@@ -113,28 +114,31 @@ export default function LessonPlayer({
     const refusal =
       "I don't have enough course material to answer that yet — let's keep going.";
 
-    const hits = keywordSearch(corpus, question, 3);
-    if (hits.length === 0) {
-      dispatch({ type: "ANSWER_QUESTION", text: refusal, sources: [] });
-      answeringRef.current = false;
-      return;
-    }
+    (async () => {
+      // Hybrid retrieval: precomputed embeddings + keyword; falls back to
+      // keyword-only if the embed model or vectors are unavailable.
+      const embeddings = await loadEmbeddings(course.programId);
+      const queryVec = embeddings ? await embedQuery(question) : null;
+      const hits = hybridSearch(corpus, question, queryVec, embeddings, 3);
 
-    const material = hits.map((h) => `[Source: ${h.label}]\n${h.text}`).join("\n\n");
-    speaker
-      .answerQuestion({ explanation: material, question })
-      .then((ans) =>
-        dispatch({
-          type: "ANSWER_QUESTION",
-          text: ans ?? refusal,
-          sources: ans ? hits.map((h) => h.label) : [],
-        }),
-      )
+      if (hits.length === 0) {
+        dispatch({ type: "ANSWER_QUESTION", text: refusal, sources: [] });
+        return;
+      }
+
+      const material = hits.map((h) => `[Source: ${h.label}]\n${h.text}`).join("\n\n");
+      const ans = await speaker.answerQuestion({ explanation: material, question });
+      dispatch({
+        type: "ANSWER_QUESTION",
+        text: ans ?? refusal,
+        sources: ans ? hits.map((h) => h.label) : [],
+      });
+    })()
       .catch(() => dispatch({ type: "ANSWER_QUESTION", text: refusal, sources: [] }))
       .finally(() => {
         answeringRef.current = false;
       });
-  }, [state.answeringQuestion, state.pendingQuestion, corpus, speaker]);
+  }, [state.answeringQuestion, state.pendingQuestion, corpus, course, speaker]);
 
   // What to show for a tutor message's text (single bubble, no duplicates).
   function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {

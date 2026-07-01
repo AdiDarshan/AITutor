@@ -16,8 +16,11 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 14 built (`npm run eval`: 23 deterministic checks, all passing). Next:
-MVP 15 — embeddings / better retrieval (or revisit per priorities).
+**Current focus:** MVP 15 built (build-time embeddings + hybrid retrieval; keyword fallback).
+`npm run eval`: 29 checks passing. Next: MVP 16 — progress & review mode.
+
+**Ops note:** after editing course content, re-run `npm run embed-courses` to refresh
+`public/embeddings/<programId>.json` (the eval's coverage check flags stale/missing vectors).
 
 ---
 
@@ -134,8 +137,14 @@ MVP 15 — embeddings / better retrieval (or revisit per priorities).
   - [x] Grading cases cover the reported bug + injection-can't-force-pass; 23 checks, all pass
   - [x] Extracted `mapCoursePack` so Node can load courses without the `@/` JSON imports
   - [~] Model generation-quality evals are browser/manual (not runnable in Node); ~23 cases (grow toward 30)
-- [ ] **MVP 15 — Embeddings + hybrid retrieval.** Keyword + embedding similarity + concept
-  boost; build-time or in-browser embeddings; keyword fallback if embeddings fail.
+- [x] **MVP 15 — Embeddings + hybrid retrieval.** Keyword + embedding similarity + concept
+  boost; build-time embeddings; keyword fallback if embeddings fail.
+  - [x] `npm run embed-courses` (transformers.js, all-MiniLM-L6-v2) → `public/embeddings/*.json`
+  - [x] Runtime: lazy client query-embedder (`embedModel.ts`, same model); `hybridSearch`
+        (embedding + keyword + title boost); `loadEmbeddings` fetch+cache
+  - [x] Fallback to keyword-only if embed model or vectors unavailable; QA uses hybrid
+  - [x] transformers.js stays a lazy client chunk (build clean, main bundle unchanged); tsc clean
+  - [x] Evals: cosine math, keyword fallback, embeddings-coverage guard (29 checks total)
 - [ ] **MVP 16 — Progress & review mode.** Module/lesson map, mastery scores, weak-topic
   review, resume from last session, session summary. Implements the Maestro `review` /
   `weekly_review` / `exam` / `retake_review` lesson types as first-class assessment/gating.

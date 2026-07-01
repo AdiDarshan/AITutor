@@ -60,3 +60,66 @@ export function keywordSearch(
     .slice(0, topK)
     .map((s) => s.chunk);
 }
+
+// --- Hybrid retrieval (keyword + precomputed embeddings) -----------------
+
+export interface CourseEmbeddings {
+  model: string;
+  dim: number;
+  vectors: Record<string, number[]>;
+}
+
+/** Dot product of two normalized vectors (= cosine similarity). */
+export function cosineSim(a: number[], b: number[]): number {
+  const n = Math.min(a.length, b.length);
+  let dot = 0;
+  for (let i = 0; i < n; i++) dot += a[i] * b[i];
+  return dot;
+}
+
+/** Combine embedding similarity with keyword overlap. Falls back to pure
+ *  keyword search when the query vector or embeddings are unavailable. */
+export function hybridSearch(
+  corpus: SourceChunk[],
+  query: string,
+  queryVec: number[] | null,
+  embeddings: CourseEmbeddings | null,
+  topK = 3,
+): SourceChunk[] {
+  if (!queryVec || !embeddings) return keywordSearch(corpus, query, topK);
+
+  const q = new Set(tokenize(query));
+  const scored = corpus.map((c) => {
+    const vec = embeddings.vectors[c.id];
+    const emb = vec ? cosineSim(queryVec, vec) : 0;
+    const terms = new Set(tokenize(c.text));
+    let overlap = 0;
+    q.forEach((t) => {
+      if (terms.has(t)) overlap += 1;
+    });
+    const kw = q.size ? overlap / q.size : 0;
+    return { chunk: c, emb, overlap, score: emb + 0.3 * kw };
+  });
+
+  return scored
+    .filter((s) => s.emb >= 0.25 || s.overlap > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+    .map((s) => s.chunk);
+}
+
+// Fetch + cache precomputed embeddings (client-side).
+const embeddingsCache = new Map<string, CourseEmbeddings | null>();
+
+export async function loadEmbeddings(programId: string): Promise<CourseEmbeddings | null> {
+  if (embeddingsCache.has(programId)) return embeddingsCache.get(programId) ?? null;
+  try {
+    const res = await fetch(`/embeddings/${programId}.json`);
+    const data = res.ok ? ((await res.json()) as CourseEmbeddings) : null;
+    embeddingsCache.set(programId, data);
+    return data;
+  } catch {
+    embeddingsCache.set(programId, null);
+    return null;
+  }
+}

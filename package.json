@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "eval": "tsx evals/run.ts"
+    "eval": "tsx evals/run.ts",
+    "embed-courses": "tsx scripts/embed-courses.ts"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@mlc-ai/web-llm": "^0.2.84",
     "next": "^15.1.0",
     "react": "^19.0.0",

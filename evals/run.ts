@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { mapCoursePack } from "../app/content/mapCoursePack";
 import { buildInitialState, makeTutorReducer } from "../app/tutor/tutorMachine";
-import { buildCorpus, keywordSearch } from "../app/retrieval/retrieval";
+import { buildCorpus, keywordSearch, cosineSim, hybridSearch } from "../app/retrieval/retrieval";
 import { parseGrade, type GradeResult } from "../app/llm/grade";
 import { parseVerdict } from "../app/llm/verify";
 import type { CoursePack, LessonChunk } from "../app/content/types";
@@ -125,6 +125,39 @@ for (const c of readJson("evals/cases/retrieval.json") as any[]) {
   const hits = keywordSearch(buildCorpus(course), c.query, 3);
   const ok = c.expect === "empty" ? hits.length === 0 : hits.length > 0;
   check(`retrieval: ${c.name}`, ok, `expected ${c.expect}, got ${hits.length} hits`);
+}
+
+// --- Suite 4b: hybrid retrieval math & fallback --------------------------
+console.log("\nHybrid retrieval");
+check("cosineSim: identical vectors ~ 1", Math.abs(cosineSim([1, 0, 0], [1, 0, 0]) - 1) < 1e-9);
+check("cosineSim: orthogonal vectors ~ 0", Math.abs(cosineSim([1, 0], [0, 1])) < 1e-9);
+{
+  const py = courses.find((c) => c.programId === "py101");
+  if (py) {
+    const corpus = buildCorpus(py);
+    // No query vector / no embeddings -> must fall back to keyword search.
+    const fb = hybridSearch(corpus, "what goes inside the parentheses", null, null, 3);
+    check("hybridSearch falls back to keyword when no vectors", fb.length > 0);
+  } else {
+    check("hybridSearch fallback (py101 present)", false);
+  }
+}
+
+// --- Suite 4c: embeddings coverage (catches stale/missing vectors) -------
+console.log("\nEmbeddings coverage");
+for (const course of courses) {
+  const file = path.join(process.cwd(), "public", "embeddings", `${course.programId}.json`);
+  if (!fs.existsSync(file)) {
+    check(`embeddings present: ${course.programId}`, false, "run: npm run embed-courses");
+    continue;
+  }
+  const data = JSON.parse(fs.readFileSync(file, "utf8")) as { vectors: Record<string, number[]> };
+  const missing = buildCorpus(course).filter((c) => !data.vectors[c.id]).map((c) => c.id);
+  check(
+    `embeddings cover all chunks: ${course.programId}`,
+    missing.length === 0,
+    missing.length ? `missing ${missing.join(", ")} — run npm run embed-courses` : "",
+  );
 }
 
 // --- Suite 5: JSON parsing robustness ------------------------------------

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "question about parentheses retrieves a chunk",
+    "programId": "py101",
+    "query": "what goes inside the parentheses of print",
+    "expect": "nonempty"
+  },
+  {
+    "name": "question about quotes on screen retrieves a chunk",
+    "programId": "py101",
+    "query": "do the quotation marks appear on the screen",
+    "expect": "nonempty"
+  },
+  {
+    "name": "out-of-scope question retrieves nothing",
+    "programId": "py101",
+    "query": "zebra giraffe quantum tariffs",
+    "expect": "empty"
+  },
+  {
+    "name": "sky question retrieves scattering chunk",
+    "programId": "everyday_science",
+    "query": "why is the sky blue scattering",
+    "expect": "nonempty"
+  }
+]

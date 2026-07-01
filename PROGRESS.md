@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 13 built (verifier on the speaker: quality/safety only, regenerate once,
-else fallback to approved text). Next: MVP 14 — eval runner (JSON test cases, pass/fail).
+**Current focus:** MVP 14 built (`npm run eval`: 23 deterministic checks, all passing). Next:
+MVP 15 — embeddings / better retrieval (or revisit per priorities).
 
 ---
 
@@ -128,8 +128,12 @@ else fallback to approved text). Next: MVP 14 — eval runner (JSON test cases, 
 
 ## Phase 5 — Evaluation & quality
 
-- [ ] **MVP 14 — Eval runner.** `npm run eval` over JSON test cases (flow, grading,
-  misconceptions, interrupts, refusal, injection, length, JSON validity); pass/fail summary.
+- [x] **MVP 14 — Eval runner.** `npm run eval` over JSON test cases; pass/fail summary.
+  - [x] `evals/run.ts` (tsx) + `evals/cases/*.json`; deterministic core only (no model in Node)
+  - [x] Suites: course validation, lesson flow, grading decisions, retrieval, JSON parsing
+  - [x] Grading cases cover the reported bug + injection-can't-force-pass; 23 checks, all pass
+  - [x] Extracted `mapCoursePack` so Node can load courses without the `@/` JSON imports
+  - [~] Model generation-quality evals are browser/manual (not runnable in Node); ~23 cases (grow toward 30)
 - [ ] **MVP 15 — Embeddings + hybrid retrieval.** Keyword + embedding similarity + concept
   boost; build-time or in-browser embeddings; keyword fallback if embeddings fail.
 - [ ] **MVP 16 — Progress & review mode.** Module/lesson map, mastery scores, weak-topic

@@ -7,6 +7,7 @@ import { cleanOutput } from "./grounding";
 import { verifierPrompt, parseVerdict } from "./verify";
 import { gradingPrompt, parseGrade, type GradeInput, type GradeResult } from "./grade";
 import { questionAnswerPrompt, type QuestionInput } from "./prompts/questionAnswerPrompt";
+import { hintPrompt, type HintInput } from "./prompts/hintPrompt";
 import { getWebLLMClient } from "./WebLLMClient";
 
 export interface Speaker {
@@ -25,6 +26,8 @@ export interface Speaker {
   grade: (input: GradeInput) => Promise<GradeResult | null>;
   /** Answer a question from the current chunk; null if not ready or fails. */
   answerQuestion: (input: QuestionInput) => Promise<string | null>;
+  /** Craft a hint for a wrong answer; null if not ready or fails. */
+  hint: (input: HintInput) => Promise<string | null>;
 }
 
 export function useSpeaker(): Speaker {
@@ -140,6 +143,21 @@ export function useSpeaker(): Speaker {
     [],
   );
 
+  const hint = useCallback(async (input: HintInput): Promise<string | null> => {
+    const client = clientRef.current;
+    if (!client || client.status() !== "ready") return null;
+    try {
+      const out = await client.generate(hintPrompt(input), {
+        maxTokens: 160,
+        temperature: 0.4,
+        label: "hint",
+      });
+      return cleanOutput(out);
+    } catch {
+      return null;
+    }
+  }, []);
+
   return {
     status,
     supported,
@@ -150,5 +168,6 @@ export function useSpeaker(): Speaker {
     rephrase,
     grade,
     answerQuestion,
+    hint,
   };
 }

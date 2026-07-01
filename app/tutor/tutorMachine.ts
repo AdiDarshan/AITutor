@@ -1,5 +1,4 @@
-import type { CoursePack } from "../content/types";
-import type { SavedProgress } from "../storage/progressStore";
+import type { CoursePack, LessonChunk } from "../content/types";
 import type { StudentEvent } from "./events";
 import type { GradeResult } from "../llm/grade";
 import { assertTransition, type TutorState } from "./stateMachine";
@@ -30,6 +29,10 @@ export interface TutorRuntimeState {
   pendingAnswer: string | null;
   /** Wrong/partial attempts on the current chunk (resets when a chunk starts). */
   chunkAttempts: number;
+  /** True while the model is crafting a hint for a wrong answer. */
+  hinting: boolean;
+  /** The wrong answer a hint is being generated for. */
+  lastWrongAnswer: string | null;
   /** True while answering a student question (async LLM call in flight). */
   answeringQuestion: boolean;
   /** The question awaiting an answer. */
@@ -46,8 +49,8 @@ export interface TutorRuntimeState {
 export type TutorAction =
   | StudentEvent
   | { type: "APPLY_GRADE"; modelGrade: GradeResult | null }
+  | { type: "APPLY_HINT"; text: string }
   | { type: "ANSWER_QUESTION"; text: string; sources: string[] }
-  | { type: "RESTORE"; saved: SavedProgress }
   | { type: "RESET" };
 
 /** Deterministic answer matching — no AI in MVP 4. */
@@ -68,6 +71,16 @@ function matchWrongHint(
   const got = normalize(raw);
   const hit = wrongs.find((w) => w.answers.some((a) => normalize(a) === got));
   return hit ? hit.hint : null;
+}
+
+/** The authored hint for a wrong answer (specific if known, else the generic one).
+ *  Used as the fallback when the model hint is unavailable. */
+export function knownWrongHint(chunk: LessonChunk, answer: string): string | null {
+  return matchWrongHint(chunk.commonWrongAnswers, answer);
+}
+
+export function staticHint(chunk: LessonChunk, answer: string): string {
+  return matchWrongHint(chunk.commonWrongAnswers, answer) ?? chunk.hint;
 }
 
 function currentLesson(course: CoursePack, s: TutorRuntimeState) {
@@ -136,6 +149,8 @@ function freshState(
     grading: false,
     pendingAnswer: null,
     chunkAttempts: 0,
+    hinting: false,
+    lastWrongAnswer: null,
     answeringQuestion: false,
     pendingQuestion: null,
     finished: false,
@@ -145,37 +160,30 @@ function freshState(
   };
 }
 
-export function buildInitialState(course: CoursePack): TutorRuntimeState {
-  let s = freshState(0, 0, 0, {}, {});
+export function buildInitialState(
+  course: CoursePack,
+  moduleIndex = 0,
+  lessonIndex = 0,
+): TutorRuntimeState {
+  let s = freshState(moduleIndex, lessonIndex, 0, {}, {});
   s = tx(s, "INTRODUCE_MODULE");
   s = tx(s, "INTRODUCE_LESSON");
   return presentChunk(s, course);
 }
 
-/** Resume at a saved position with restored mastery/mistakes; re-presents the current chunk. */
-function buildRestoredState(course: CoursePack, saved: SavedProgress): TutorRuntimeState {
-  const mod = course.modules[saved.moduleIndex];
-  const lesson = mod?.lessons[saved.lessonIndex];
-  const chunk = lesson?.chunks[saved.chunkIndex];
-  if (!mod || !lesson || !chunk) {
-    // Saved position no longer valid (e.g. content changed) — start fresh.
-    return buildInitialState(course);
-  }
-
-  let s = freshState(
-    saved.moduleIndex,
-    saved.lessonIndex,
-    saved.chunkIndex,
-    saved.mastery ?? {},
-    saved.mistakes ?? {},
-  );
-  s = tx(s, "INTRODUCE_MODULE");
-  s = tx(s, "INTRODUCE_LESSON");
-  return presentChunk(s, course);
+export interface ReducerOptions {
+  /** End after the starting lesson instead of advancing to the next one. */
+  singleLesson?: boolean;
+  startModule?: number;
+  startLesson?: number;
 }
 
 /** From ADVANCE_CHUNK after a correct answer, move to the next chunk/lesson/module or end. */
-function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
+function advance(
+  s: TutorRuntimeState,
+  course: CoursePack,
+  singleLesson = false,
+): TutorRuntimeState {
   const lesson = currentLesson(course, s);
   if (s.chunkIndex + 1 < lesson.chunks.length) {
     s = { ...s, chunkIndex: s.chunkIndex + 1 };
@@ -192,6 +200,14 @@ function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
         ? " with no mistakes. 🌟"
         : ` with ${doneMistakes} mistake${doneMistakes > 1 ? "s" : ""}.`),
   );
+
+  // Single-lesson mode: end here (return to the lesson list) via a valid path.
+  if (singleLesson) {
+    s = tx(s, "ADVANCE_LESSON");
+    s = tx(s, "ADVANCE_MODULE");
+    s = tx(s, "END_PROGRAM");
+    return { ...s, finished: true };
+  }
 
   s = tx(s, "ADVANCE_LESSON");
   const mod = course.modules[s.moduleIndex];
@@ -221,13 +237,11 @@ function reduce(
   s: TutorRuntimeState,
   action: TutorAction,
   course: CoursePack,
+  opts: Required<ReducerOptions>,
 ): TutorRuntimeState {
   switch (action.type) {
     case "RESET":
-      return buildInitialState(course);
-
-    case "RESTORE":
-      return buildRestoredState(course, action.saved);
+      return buildInitialState(course, opts.startModule, opts.startLesson);
 
     // Quick-action helpers: only while awaiting an answer; they surface approved
     // content and stay at ASK_MICRO_QUIZ (no state transition, no model yet).
@@ -325,10 +339,11 @@ function reduce(
         };
         st = tx(st, "ADVANCE_CHUNK");
         st = emitTutor(st, chunk.correctFeedback);
-        return advance(st, course);
+        return advance(st, course, opts.singleLesson);
       }
 
-      // partial or wrong: update mastery, count wrongs, bump the attempt counter.
+      // partial or wrong: update mastery, count the wrong, bump attempts, then
+      // hand off to the model to craft a hint (component dispatches APPLY_HINT).
       const attempts = st.chunkAttempts + 1;
       st = {
         ...st,
@@ -342,23 +357,16 @@ function reduce(
             ? { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 }
             : st.mistakes,
       };
+      // First slip → GIVE_HINT; repeated → REMEDIATE (the hint prompt escalates).
+      st = tx(st, attempts >= 2 ? "REMEDIATE" : "GIVE_HINT");
+      return { ...st, hinting: true, lastWrongAnswer: answer };
+    }
 
-      // First slip → a quick hint. Repeated slips → remediate: slow down,
-      // re-teach the idea, then re-ask.
-      if (attempts >= 2) {
-        st = tx(st, "REMEDIATE");
-        st = emitTutor(st, "No worries — let's slow down and go over this again.");
-        st = emitTutor(st, chunk.explanation, chunk.example, true);
-        if (knownWrongHint) st = emitTutor(st, knownWrongHint);
-        st = tx(st, "ASK_MICRO_QUIZ");
-        st = emitTutor(st, chunk.checkQuestion);
-        return { ...st, awaitingAnswer: true };
-      }
-
-      st = tx(st, "GIVE_HINT");
-      st = emitTutor(st, knownWrongHint ?? chunk.hint);
+    case "APPLY_HINT": {
+      if (!s.hinting) return s;
+      let st = emitTutor(s, action.text);
       st = tx(st, "ASK_MICRO_QUIZ");
-      return { ...st, awaitingAnswer: true };
+      return { ...st, hinting: false, lastWrongAnswer: null, awaitingAnswer: true };
     }
 
     default:
@@ -366,19 +374,12 @@ function reduce(
   }
 }
 
-/** Extract the persistable progress from runtime state. */
-export function toSavedProgress(course: CoursePack, s: TutorRuntimeState): SavedProgress {
-  return {
-    programId: course.programId,
-    moduleIndex: s.moduleIndex,
-    lessonIndex: s.lessonIndex,
-    chunkIndex: s.chunkIndex,
-    mastery: s.mastery,
-    mistakes: s.mistakes,
+/** Bind a course pack (and options) to the reducer for use with useReducer. */
+export function makeTutorReducer(course: CoursePack, opts: ReducerOptions = {}) {
+  const full: Required<ReducerOptions> = {
+    singleLesson: opts.singleLesson ?? false,
+    startModule: opts.startModule ?? 0,
+    startLesson: opts.startLesson ?? 0,
   };
-}
-
-/** Bind a course pack to the reducer for use with useReducer. */
-export function makeTutorReducer(course: CoursePack) {
-  return (s: TutorRuntimeState, action: TutorAction) => reduce(s, action, course);
+  return (s: TutorRuntimeState, action: TutorAction) => reduce(s, action, course, full);
 }

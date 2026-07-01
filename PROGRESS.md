@@ -16,8 +16,15 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 16 — multi-lesson + progress display done (per-lesson summary + lesson
-map with mastery bars). Only review mode remains deferred (user). `npm run eval`: 29 passing.
+**Current focus:** Big UX redesign shipped — LMS flow + slide presentation + agentic hints.
+- **Home → lesson → home**: course home lists lessons (status + mastery); click one → its lesson.
+- **Presentation UI**: no chat box; content slide → question slide (revealed one at a time) →
+  multiple-choice buttons (derived: yes/no, or correct + known-wrong distractors) or text box.
+  Quick actions fixed at bottom; "ask a question" opens an input slide.
+- **Agentic hints**: 4th LLM job — model sees content + wrong answer + correct answer and crafts
+  a guiding hint (doesn't reveal); escalates on repeat; authored hint is the fallback.
+- Engine: single-lesson mode; `hinting`/APPLY_HINT + `staticHint`/`knownWrong` helpers.
+`npm run eval`: 29 passing. Review mode still deferred; mid-lesson cross-session resume dropped (v1).
 
 **Ops note:** after editing course content, re-run `npm run embed-courses` to refresh
 `public/embeddings/<programId>.json` (the eval's coverage check flags stale/missing vectors).

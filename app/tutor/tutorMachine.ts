@@ -182,6 +182,17 @@ function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
     return presentChunk(s, course);
   }
 
+  // Lesson finished — post a quick progress summary before moving on.
+  const doneMistakes = s.mistakes[lesson.lessonId] ?? 0;
+  const steps = lesson.chunks.length;
+  s = emitTutor(
+    s,
+    `📊 Lesson complete — ${lesson.title}. You worked through all ${steps} steps` +
+      (doneMistakes === 0
+        ? " with no mistakes. 🌟"
+        : ` with ${doneMistakes} mistake${doneMistakes > 1 ? "s" : ""}.`),
+  );
+
   s = tx(s, "ADVANCE_LESSON");
   const mod = course.modules[s.moduleIndex];
   if (s.lessonIndex + 1 < mod.lessons.length) {

@@ -16,9 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 16 partial — multi-lesson experience added (PY101 Week 1 now has 3
-lessons; dynamic header; lesson transitions). Review mode intentionally deferred (user).
-`npm run eval`: 29 checks passing (flow now traverses all 3 lessons).
+**Current focus:** MVP 16 — multi-lesson + progress display done (per-lesson summary + lesson
+map with mastery bars). Only review mode remains deferred (user). `npm run eval`: 29 passing.
 
 **Ops note:** after editing course content, re-run `npm run embed-courses` to refresh
 `public/embeddings/<programId>.json` (the eval's coverage check flags stale/missing vectors).
@@ -152,7 +151,8 @@ lessons; dynamic header; lesson transitions). Review mode intentionally deferred
   - [x] Engine already advances lesson→lesson; added transition messages ("Next up: …")
   - [x] Dynamic lesson header in `LessonPlayer` (module · lesson N of M · title); `CourseApp` = switcher
   - [x] Generic course-completion message; re-embedded; eval flow traverses all 3 lessons (29 pass)
-  - [ ] Progress map / mastery display / session summary (part of MVP 16, not done)
+  - [x] Progress display: per-lesson summary card in chat on completion; `ProgressMap`
+        (toggle, lessons with status + mastery bars); session summary via completion messages
   - [ ] Review mode: weakest lesson → diagnostic → remediate → retry (deferred)
 
 ## Phase 6 — Authoring, server, hardening

@@ -17,6 +17,7 @@ import StudentMessage from "./StudentMessage";
 import QuickActions from "./QuickActions";
 import Composer from "./Composer";
 import SourceBadge from "./SourceBadge";
+import ProgressMap from "./ProgressMap";
 import styles from "./LessonPlayer.module.css";
 
 export default function LessonPlayer({
@@ -29,6 +30,7 @@ export default function LessonPlayer({
   const reducer = useMemo(() => makeTutorReducer(course), [course]);
   const [state, dispatch] = useReducer(reducer, course, buildInitialState);
   const [showDebug, setShowDebug] = useState(false);
+  const [showProgress, setShowProgress] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   const [askMode, setAskMode] = useState(false);
 
@@ -175,6 +177,13 @@ export default function LessonPlayer({
 
       <div className={styles.debugBar}>
         <div className={styles.debugRow}>
+          <button
+            className={styles.startOver}
+            type="button"
+            onClick={() => setShowProgress((v) => !v)}
+          >
+            📊 Progress
+          </button>
           <button className={styles.startOver} type="button" onClick={startOver}>
             ↺ Start over
           </button>
@@ -186,6 +195,14 @@ export default function LessonPlayer({
             🐞 {state.machineState} · mastery {mastery.toFixed(2)}
           </button>
         </div>
+        {showProgress && (
+          <ProgressMap
+            module={mod}
+            currentLessonIndex={state.lessonIndex}
+            mastery={state.mastery}
+            finished={state.finished}
+          />
+        )}
         {showDebug && (
           <div className={styles.debugPanel}>
             <div>

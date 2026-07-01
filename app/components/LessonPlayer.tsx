@@ -7,16 +7,18 @@ import {
   makeTutorReducer,
   staticHint,
   knownWrongHint,
+  type LessonItem,
 } from "../tutor/tutorMachine";
 import type { StudentEvent } from "../tutor/events";
 import type { Speaker } from "../llm/useSpeaker";
 import { buildCorpus, hybridSearch, loadEmbeddings } from "../retrieval/retrieval";
 import { embedQuery } from "../retrieval/embedModel";
 import { deriveQuestionMode } from "../tutor/choices";
-import QuickActions from "./QuickActions";
-import Composer from "./Composer";
+import { highlightPy } from "./codeHighlight";
 import SourceBadge from "./SourceBadge";
 import styles from "./LessonPlayer.module.css";
+
+type GenState = Record<string, "pending" | "failed" | { text: string }>;
 
 export default function LessonPlayer({
   course,
@@ -40,22 +42,17 @@ export default function LessonPlayer({
   const [state, dispatch] = useReducer(reducer, null, () =>
     buildInitialState(course, moduleIndex, lessonIndex),
   );
-  const [showDebug, setShowDebug] = useState(false);
   const [askMode, setAskMode] = useState(false);
-  // How many slides are revealed (they appear one at a time — content, then question).
   const [revealed, setRevealed] = useState(0);
-
-  // Per-message generation state: "pending" | "failed" | { text }.
-  const [gen, setGen] = useState<Record<string, "pending" | "failed" | { text: string }>>({});
+  const [draft, setDraft] = useState("");
+  const [askDraft, setAskDraft] = useState("");
+  const [gen, setGen] = useState<GenState>({});
   const startedRef = useRef<Set<string>>(new Set());
 
   const mod = course.modules[moduleIndex];
   const lesson = mod.lessons[lessonIndex];
   const lessonId = lesson.lessonId;
-  const mastery = state.mastery[lessonId] ?? 0;
-  const mistakes = state.mistakes[lessonId] ?? 0;
 
-  // Current question: multiple-choice buttons or a text box (derived from data).
   const activeChunk = state.awaitingAnswer ? lesson.chunks[state.chunkIndex] : null;
   const questionMode = useMemo(
     () => (activeChunk ? deriveQuestionMode(activeChunk) : ({ kind: "open" } as const)),
@@ -68,7 +65,6 @@ export default function LessonPlayer({
     dispatch(event);
   }
 
-  // Report completion once when the lesson finishes (persists progress upstream).
   const reportedRef = useRef(false);
   useEffect(() => {
     if (state.finished && !reportedRef.current) {
@@ -77,51 +73,46 @@ export default function LessonPlayer({
     }
   }, [state.finished, state.mastery, state.mistakes, lessonId, onComplete]);
 
-  const messagesRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const el = messagesRef.current;
+    const el = scrollRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [state.messages, revealed]);
+  }, [state.items, revealed, state.grading, state.hinting]);
 
-  // Reveal slides one at a time (content, then question, then feedback…). A
-  // tutor slide waits for its AI text to finish before the next slide appears.
+  // Reveal items one at a time (content, then question, …).
   useEffect(() => {
-    if (revealed >= state.messages.length) return;
-    const last = revealed > 0 ? state.messages[revealed - 1] : null;
-    if (last && last.speakable && speaker.ready) {
+    if (revealed >= state.items.length) return;
+    const last = revealed > 0 ? state.items[revealed - 1] : null;
+    if (last && (last.kind === "content" || last.kind === "ai") && last.speakable && speaker.ready) {
       const g = gen[last.id];
       const settled = g === "failed" || (typeof g === "object" && g !== null);
-      if (!settled) return; // wait for the content to finish "writing"
+      if (!settled) return;
     }
-    const next = state.messages[revealed];
-    const delay = revealed === 0 || next.role === "student" ? 0 : 650;
-    const t = setTimeout(
-      () => setRevealed((r) => Math.min(r + 1, state.messages.length)),
-      delay,
-    );
+    const t = setTimeout(() => setRevealed((r) => Math.min(r + 1, state.items.length)), revealed === 0 ? 0 : 500);
     return () => clearTimeout(t);
-  }, [revealed, state.messages, gen, speaker.ready]);
+  }, [revealed, state.items, gen, speaker.ready]);
 
-  // Generate tutor phrasing for each approved explanation (once each).
+  // Teach: generate phrasing for each approved explanation once.
   useEffect(() => {
     if (!speaker.ready) return;
-    for (const m of state.messages) {
-      if (m.role !== "tutor" || !m.speakable || startedRef.current.has(m.id)) continue;
-      startedRef.current.add(m.id);
-      setGen((prev) => ({ ...prev, [m.id]: "pending" }));
-      const approved = m.text;
+    for (const it of state.items) {
+      if ((it.kind !== "content" && it.kind !== "ai") || !it.speakable) continue;
+      if (startedRef.current.has(it.id)) continue;
+      startedRef.current.add(it.id);
+      setGen((prev) => ({ ...prev, [it.id]: "pending" }));
+      const approved = it.text;
       speaker.rephrase(approved).then((out) => {
-        setGen((prev) => ({ ...prev, [m.id]: out ? { text: out } : "failed" }));
+        setGen((prev) => ({ ...prev, [it.id]: out ? { text: out } : "failed" }));
       });
     }
-  }, [state.messages, speaker.ready, speaker]);
+  }, [state.items, speaker.ready, speaker]);
 
-  // Grade a submitted answer with the model, then let the reducer decide.
+  // Grade a submitted answer.
   const gradingRef = useRef(false);
   useEffect(() => {
     if (!state.grading || state.pendingAnswer == null || gradingRef.current) return;
     gradingRef.current = true;
-    const chunk = mod.lessons[state.lessonIndex].chunks[state.chunkIndex];
+    const chunk = lesson.chunks[state.chunkIndex];
     speaker
       .grade({
         question: chunk.checkQuestion,
@@ -135,10 +126,9 @@ export default function LessonPlayer({
       .finally(() => {
         gradingRef.current = false;
       });
-  }, [state.grading, state.pendingAnswer, state.lessonIndex, state.chunkIndex, mod, speaker]);
+  }, [state.grading, state.pendingAnswer, state.chunkIndex, lesson, speaker]);
 
-  // Agentic hint: model sees the content + the wrong answer and crafts a hint
-  // (static authored hint is the fallback). See reducer APPLY_HINT.
+  // Agentic hint on a wrong answer.
   const hintingRef = useRef(false);
   useEffect(() => {
     if (!state.hinting || state.lastWrongAnswer == null || hintingRef.current) return;
@@ -163,17 +153,14 @@ export default function LessonPlayer({
       });
   }, [state.hinting, state.lastWrongAnswer, state.chunkIndex, state.chunkAttempts, lesson, speaker]);
 
-  // Retrieval corpus over the WHOLE course (Q&A can answer from any lesson).
+  // Answer a paused-lesson question via hybrid retrieval.
   const corpus = useMemo(() => buildCorpus(course), [course]);
-
-  // Answer a paused-lesson question via hybrid retrieval, then return.
   const answeringRef = useRef(false);
   useEffect(() => {
     if (!state.answeringQuestion || state.pendingQuestion == null || answeringRef.current) return;
     answeringRef.current = true;
     const question = state.pendingQuestion;
     const refusal = "I don't have enough course material to answer that yet — let's keep going.";
-
     (async () => {
       const embeddings = await loadEmbeddings(course.programId);
       const queryVec = embeddings ? await embedQuery(question) : null;
@@ -196,153 +183,287 @@ export default function LessonPlayer({
       });
   }, [state.answeringQuestion, state.pendingQuestion, corpus, course, speaker]);
 
-  function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {
+  function genText(id: string, approved: string, speakable?: boolean): string | null {
     if (!speakable) return approved;
     const g = gen[id];
     if (g && typeof g === "object") return g.text;
     if (g === "failed") return approved;
-    return null;
+    return null; // writing
   }
 
-  function restartLesson() {
-    startedRef.current.clear();
-    reportedRef.current = false;
-    setGen({});
+  function submitAnswer() {
+    const v = draft.trim();
+    if (!v) return;
+    send({ type: "SUBMIT_ANSWER", text: v });
+    setDraft("");
+  }
+
+  function submitAsk() {
+    const v = askDraft.trim();
+    if (!v) return;
+    send({ type: "ASK_QUESTION", text: v });
+    setAskDraft("");
     setAskMode(false);
-    setRevealed(0);
-    dispatch({ type: "RESET" });
   }
 
-  const allRevealed = revealed >= state.messages.length;
-  const showAnswerPanel =
-    !state.finished &&
-    !state.grading &&
-    !state.answeringQuestion &&
+  const allRevealed = revealed >= state.items.length;
+  const canAnswer =
     state.awaitingAnswer &&
-    allRevealed;
+    allRevealed &&
+    !state.grading &&
+    !state.hinting &&
+    !state.answeringQuestion &&
+    !askMode;
+
+  // Keyboard shortcuts via a window listener (works regardless of focus).
+  const keyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  keyRef.current = (e: KeyboardEvent) => {
+    const el = document.activeElement as HTMLElement | null;
+    if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+    if (canAnswer && questionMode.kind === "choice" && /^[1-9]$/.test(e.key)) {
+      const idx = parseInt(e.key, 10) - 1;
+      if (idx < questionMode.options.length) {
+        e.preventDefault();
+        send({ type: "SUBMIT_ANSWER", text: questionMode.options[idx] });
+      }
+      return;
+    }
+    if (state.finished || state.grading || state.hinting || state.answeringQuestion) return;
+    const k = e.key.toLowerCase();
+    if (k === "e") {
+      e.preventDefault();
+      send({ type: "REQUEST_EXAMPLE" });
+    } else if (k === "c") {
+      e.preventDefault();
+      send({ type: "CONFUSED" });
+    } else if (k === "a") {
+      e.preventDefault();
+      setAskMode((v) => !v);
+    }
+  };
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => keyRef.current(e);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+
+  const progressPct = state.finished
+    ? 100
+    : Math.round((state.chunkIndex / lesson.chunks.length) * 100);
 
   return (
-    <div className={styles.lesson}>
-      <header className={styles.lessonHeader}>
+    <div className={styles.root}>
+      <div className={styles.header}>
         <div className={styles.headerRow}>
           <button className={styles.back} type="button" onClick={onExit}>
-            ← All lessons
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            Lessons
           </button>
-          <div className={styles.headerSpacer} />
-          <button className={styles.startOver} type="button" onClick={restartLesson}>
-            ↺ Restart
-          </button>
-          <button
-            className={styles.debugChip}
-            type="button"
-            onClick={() => setShowDebug((v) => !v)}
-          >
-            🐞 {state.machineState} · {mastery.toFixed(2)}
-          </button>
+          <span className={styles.lessonLabel}>
+            {lesson.title} · {lessonIndex + 1}/{mod.lessons.length}
+          </span>
         </div>
-        <p className={styles.crumb}>
-          {course.programId.toUpperCase()} · {mod.title} · lesson {lessonIndex + 1} of{" "}
-          {mod.lessons.length}
-        </p>
-        <h1 className={styles.lessonTitle}>{lesson.title}</h1>
-        {showDebug && (
-          <div className={styles.debugPanel}>
-            <div>
-              chunk {state.chunkIndex + 1} · awaiting {state.awaitingAnswer ? "yes" : "no"} ·
-              attempts {state.chunkAttempts} · mistakes {mistakes}
-            </div>
-            <div className={styles.debugHistory}>{state.history.join(" → ")}</div>
-          </div>
-        )}
-      </header>
-
-      <div className={styles.slides} ref={messagesRef}>
-        {state.messages.slice(0, revealed).map((m) => {
-          if (m.role === "student") {
-            return (
-              <div key={m.id} className={styles.studentSlide}>
-                {m.text}
-              </div>
-            );
-          }
-          const text = tutorText(m.id, m.speakable, m.text);
-          return (
-            <div key={m.id} className={styles.slide}>
-              {text === null ? (
-                <span className={styles.generating}>✨ writing…</span>
-              ) : (
-                <>
-                  <div className={styles.slideText}>{text}</div>
-                  {m.example && <pre className={styles.example}>{m.example}</pre>}
-                  {m.sources && m.sources.length > 0 && <SourceBadge sources={m.sources} />}
-                </>
-              )}
-            </div>
-          );
-        })}
-
-        {state.grading && <div className={styles.statusSlide}>✨ checking your answer…</div>}
-        {state.hinting && <div className={styles.statusSlide}>✨ thinking of a hint…</div>}
-        {state.answeringQuestion && <div className={styles.statusSlide}>✨ thinking…</div>}
-
-        {/* Ask-a-question input slide */}
-        {showAnswerPanel && askMode && (
-          <div className={styles.panel}>
-            <p className={styles.panelPrompt}>What&apos;s your question?</p>
-            <Composer
-              onSend={(text) => {
-                send({ type: "ASK_QUESTION", text });
-                setAskMode(false);
-              }}
-              placeholder="Type your question…"
-            />
-          </div>
-        )}
-
-        {/* Answer input slide: multiple-choice buttons or a text box */}
-        {showAnswerPanel && !askMode && (
-          <div className={styles.panel}>
-            {questionMode.kind === "choice" ? (
-              <div className={styles.choices}>
-                {questionMode.options.map((opt) => (
-                  <button
-                    key={opt}
-                    className={styles.choiceBtn}
-                    type="button"
-                    onClick={() => send({ type: "SUBMIT_ANSWER", text: opt })}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <Composer
-                onSend={(text) => send({ type: "SUBMIT_ANSWER", text })}
-                placeholder="Type your answer…"
-              />
-            )}
-          </div>
-        )}
-
-        {state.finished && allRevealed && (
-          <button className={styles.doneButton} type="button" onClick={onExit}>
-            ← Back to lessons
-          </button>
-        )}
+        <div className={styles.progressTrack}>
+          <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
+        </div>
       </div>
 
-      {!state.finished && (
-        <div className={styles.actionBar}>
-          <QuickActions
-            onEvent={send}
-            onToggleAsk={() => setAskMode((v) => !v)}
-            askMode={askMode}
-            disabled={
-              !allRevealed || !state.awaitingAnswer || state.grading || state.answeringQuestion
-            }
-          />
+      <div className={styles.scroll} ref={scrollRef}>
+        <div className={styles.stack}>
+          {state.items.slice(0, revealed).map((it) => renderItem(it))}
         </div>
+      </div>
+
+      {askMode && !state.finished && (
+        <div className={styles.askBar}>
+          <input
+            className={styles.askInput}
+            value={askDraft}
+            onChange={(e) => setAskDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submitAsk();
+              }
+            }}
+            placeholder="Ask about this part of the lesson…"
+            aria-label="Your question"
+            autoFocus
+          />
+          <button className={styles.askSend} type="button" onClick={submitAsk}>
+            Send
+          </button>
+        </div>
+      )}
+
+      {!state.finished && (
+        <>
+          <div className={styles.shortcuts}>
+            <span><b>1–4</b> choose</span>
+            <span><b>↵</b> answer</span>
+            <span><b>E C A</b> below</span>
+          </div>
+          <div className={styles.actionBar}>
+            <button className={styles.action} type="button" onClick={() => send({ type: "REQUEST_EXAMPLE" })}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eaad5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1v.2h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0012 2z" /></svg>
+              Example<span className={styles.key}>E</span>
+            </button>
+            <button className={styles.action} type="button" onClick={() => send({ type: "CONFUSED" })}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#808ff0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+              I&apos;m confused<span className={styles.key}>C</span>
+            </button>
+            <button className={`${styles.action} ${askMode ? styles.actionActive : ""}`} type="button" onClick={() => setAskMode((v) => !v)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#51985c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 01-11.9 7.8L3 21l1.7-6.1A8.5 8.5 0 1121 11.5z" /></svg>
+              Ask<span className={styles.key}>A</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
+
+  function renderItem(it: LessonItem) {
+    if (it.kind === "note") {
+      return (
+        <div key={it.id} className={styles.note}>
+          {it.text}
+        </div>
+      );
+    }
+
+    if (it.kind === "done") {
+      return (
+        <div key={it.id} className={styles.doneCard}>
+          <div className={styles.doneCircle}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#27764b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+          </div>
+          <div className={styles.doneTitle}>Lesson complete</div>
+          <div className={styles.doneSub}>Nice work. Head back to keep going.</div>
+          <button className={styles.doneBtn} type="button" onClick={onExit}>
+            ← Back to lessons
+          </button>
+        </div>
+      );
+    }
+
+    if (it.kind === "content") {
+      const text = genText(it.id, it.text, it.speakable);
+      return (
+        <div key={it.id} className={styles.contentCard}>
+          <span className={styles.lessonPill}>Lesson</span>
+          <div className={styles.contentText}>
+            {text === null ? <span className={styles.writing}>✨ writing…</span> : text}
+          </div>
+          {it.example && <pre className={styles.example}>{highlightPy(it.example)}</pre>}
+        </div>
+      );
+    }
+
+    if (it.kind === "ai") {
+      const text = genText(it.id, it.text, it.speakable);
+      return (
+        <div key={it.id} className={styles.aiCard}>
+          <span className={styles.aiPill}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#27764b" stroke="none"><path d="M12 2l1.9 5.8L20 9.5l-5 3.6L16.5 19 12 15.6 7.5 19 9 13.1 4 9.5l6.1-1.7z" /></svg>
+            Maestro
+          </span>
+          <div className={styles.aiText}>
+            {text === null ? <span className={styles.writing}>✨ writing…</span> : text}
+          </div>
+          {it.example && <pre className={styles.example}>{highlightPy(it.example)}</pre>}
+          {it.sources && it.sources.length > 0 && <SourceBadge sources={it.sources} />}
+        </div>
+      );
+    }
+
+    // question
+    if (it.status === "done") {
+      return (
+        <div key={it.id} className={styles.feedbackCard}>
+          <span className={styles.donePill}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059273" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+            Done
+          </span>
+          <div className={styles.donePrompt}>{it.prompt}</div>
+          <div className={styles.doneAnswer}>{it.answer}</div>
+          {it.correct && <div className={styles.doneCorrect}>{it.correct}</div>}
+        </div>
+      );
+    }
+
+    // active question — inline input
+    const mc = questionMode.kind === "choice";
+    return (
+      <div key={it.id} className={styles.questionCard}>
+        <span className={styles.checkPill}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5c6bcb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
+          Check
+        </span>
+        <div className={styles.questionText}>{it.prompt}</div>
+
+        {state.grading && <div className={styles.inlineStatus}>✨ checking your answer…</div>}
+        {state.hinting && <div className={styles.inlineStatus}>✨ thinking of a hint…</div>}
+
+        {canAnswer && mc && questionMode.kind === "choice" && (
+          <div className={styles.choices}>
+            {questionMode.options.map((opt, i) => {
+              const isWrong = it.wrong != null && norm(opt) === norm(it.wrong);
+              return (
+                <button
+                  key={opt}
+                  className={`${styles.choice} ${isWrong ? styles.choiceWrong : ""}`}
+                  type="button"
+                  onClick={() => send({ type: "SUBMIT_ANSWER", text: opt })}
+                >
+                  <span className={`${styles.radio} ${isWrong ? styles.radioWrong : ""}`} />
+                  <span className={styles.choiceLabel}>{opt}</span>
+                  <span className={styles.choiceNum}>{i + 1}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {canAnswer && !mc && (
+          <>
+            <div className={styles.answerRow}>
+              <input
+                className={styles.input}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitAnswer();
+                  }
+                }}
+                placeholder="Type your answer…"
+                aria-label="Your answer"
+                autoFocus
+              />
+              <button className={styles.checkBtn} type="button" onClick={submitAnswer}>
+                Check
+              </button>
+            </div>
+            <div className={styles.pressHint}>
+              Press <kbd>↵</kbd> to check
+            </div>
+          </>
+        )}
+
+        {it.hint && (
+          <div className={styles.hintBox}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a97907" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", marginTop: 1 }}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+            <span>{it.hint}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
+function norm(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }

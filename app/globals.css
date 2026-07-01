@@ -1,12 +1,41 @@
 :root {
-  --bg: #f6f7f9;
+  /* Maestro design palette (from LessonStack.dc.html) */
+  --bg: #f5f5f0;
   --surface: #ffffff;
-  --border: #e2e5ea;
-  --text: #1b1f24;
-  --muted: #5c6470;
-  --accent: #2f6fed;
-  --accent-soft: #eaf1fe;
-  --radius: 12px;
+  --border: #e2e1da;
+  --text: #0a0a0a;
+  --muted: #858581;
+  --muted-strong: #5f5e5c;
+
+  /* blue = "check" / interactive */
+  --accent: #5c6bcb;
+  --accent-soft: #eff3fe;
+  --accent-border: #c7cffb;
+
+  /* greens */
+  --green: #51985c;
+  --green-strong: #27764b;
+  --green-soft: #f7ffe5;
+
+  /* done */
+  --done: #059273;
+  --done-soft: #dcf6ea;
+  --done-border: #c3f2de;
+
+  /* hint */
+  --hint-bg: #fffbeb;
+  --hint-border: #ffec9a;
+  --hint-text: #7a4b0d;
+
+  /* code */
+  --code-bg: #f9f9f6;
+  --code-border: #ecebe4;
+
+  --radius: 16px;
+
+  --font-display: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+  --font-text: "Wix Madefor Text", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Menlo", ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 * {
@@ -22,14 +51,7 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  font-family: var(--font-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }

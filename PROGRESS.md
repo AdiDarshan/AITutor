@@ -16,7 +16,17 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** Big UX redesign shipped — LMS flow + slide presentation + agentic hints.
+**Current focus:** Maestro LessonStack design — item-model rewrite so questions are single cards
+with inline actions that resolve in place (active→done), not a chat. Window-level keyboard
+shortcuts; full-bleed layout fixed. eval 29 passing.
+
+**Earlier note:** Maestro design system applied (imported LessonStack.dc.html via the design MCP).
+Wix Madefor fonts + warm palette; header progress bar; content/question/hint/feedback/AI/done
+cards with pills; MC options (radio + number badges) or text+Check input; icon action bar
+(Example/I'm confused/Ask) + shortcut footer + keyboard nav (1–4, E/C/A); Python syntax highlight.
+Messages tagged by `kind` to pick a card style. Kept the home→single-lesson flow. eval 29 passing.
+
+**Prior redesign (still in place):** LMS flow + slide presentation + agentic hints.
 - **Home → lesson → home**: course home lists lessons (status + mastery); click one → its lesson.
 - **Presentation UI**: no chat box; content slide → question slide (revealed one at a time) →
   multiple-choice buttons (derived: yes/no, or correct + known-wrong distractors) or text box.

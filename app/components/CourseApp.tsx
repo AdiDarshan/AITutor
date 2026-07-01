@@ -43,7 +43,7 @@ export default function CourseApp({ courses }: { courses: CoursePack[] }) {
 
   return (
     <>
-      {courses.length > 1 && (
+      {courses.length > 1 && view.kind === "home" && (
         <div className={styles.switcherRow}>
           <select
             className={styles.switcher}

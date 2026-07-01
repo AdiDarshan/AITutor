@@ -140,8 +140,8 @@ export default function LessonPlayer({
               {state.lessonIndex + 1} · chunk {state.chunkIndex + 1}
             </div>
             <div>
-              awaiting answer: {state.awaitingAnswer ? "yes" : "no"} · mastery{" "}
-              {mastery.toFixed(2)} · mistakes {mistakes}
+              awaiting: {state.awaitingAnswer ? "yes" : "no"} · attempts{" "}
+              {state.chunkAttempts} · mastery {mastery.toFixed(2)} · mistakes {mistakes}
             </div>
             <div className={styles.debugHistory}>{state.history.join(" → ")}</div>
           </div>

@@ -26,6 +26,8 @@ export interface TutorRuntimeState {
   grading: boolean;
   /** The answer awaiting a grade. */
   pendingAnswer: string | null;
+  /** Wrong/partial attempts on the current chunk (resets when a chunk starts). */
+  chunkAttempts: number;
   finished: boolean;
   /** Mastery score (0..1) per lessonId. */
   mastery: Record<string, number>;
@@ -106,7 +108,7 @@ function presentChunk(s: TutorRuntimeState, course: CoursePack): TutorRuntimeSta
   s = tx(s, "ASK_UNDERSTANDING");
   s = tx(s, "ASK_MICRO_QUIZ");
   s = emitTutor(s, chunk.checkQuestion);
-  return { ...s, awaitingAnswer: true };
+  return { ...s, awaitingAnswer: true, chunkAttempts: 0 };
 }
 
 function freshState(
@@ -125,6 +127,7 @@ function freshState(
     awaitingAnswer: false,
     grading: false,
     pendingAnswer: null,
+    chunkAttempts: 0,
     finished: false,
     mastery,
     mistakes,
@@ -287,9 +290,11 @@ function reduce(
         return advance(st, course);
       }
 
-      // partial or wrong: update mastery, count wrongs, hint and re-ask.
+      // partial or wrong: update mastery, count wrongs, bump the attempt counter.
+      const attempts = st.chunkAttempts + 1;
       st = {
         ...st,
+        chunkAttempts: attempts,
         mastery: {
           ...st.mastery,
           [lessonId]: updateMastery(st.mastery[lessonId] ?? 0, outcome),
@@ -299,8 +304,21 @@ function reduce(
             ? { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 }
             : st.mistakes,
       };
-      st = tx(st, "GIVE_HINT");
       const specific = matchWrongHint(chunk.commonWrongAnswers, answer);
+
+      // First slip → a quick hint. Repeated slips → remediate: slow down,
+      // re-teach the idea, then re-ask.
+      if (attempts >= 2) {
+        st = tx(st, "REMEDIATE");
+        st = emitTutor(st, "No worries — let's slow down and go over this again.");
+        st = emitTutor(st, chunk.explanation, chunk.example, true);
+        if (specific) st = emitTutor(st, specific);
+        st = tx(st, "ASK_MICRO_QUIZ");
+        st = emitTutor(st, chunk.checkQuestion);
+        return { ...st, awaitingAnswer: true };
+      }
+
+      st = tx(st, "GIVE_HINT");
       st = emitTutor(st, specific ?? chunk.hint);
       st = tx(st, "ASK_MICRO_QUIZ");
       return { ...st, awaitingAnswer: true };

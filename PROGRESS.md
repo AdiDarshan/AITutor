@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 9 built (LLM grades free-text answers; app enforces advancement; exact
-match + deterministic are the floor). Needs browser test. Next: MVP 10 — remediation loop.
+**Current focus:** MVP 10 built (remediation loop: hint → re-teach on repeated slips). Next:
+MVP 11 — question interrupt mode (answer from the current chunk, return to the lesson).
 
 ---
 
@@ -96,8 +96,12 @@ match + deterministic are the floor). Needs browser test. Next: MVP 10 — remed
   - [x] SUBMIT_ANSWER → grading → APPLY_GRADE; exact match always correct; else model if conf≥0.7
   - [x] JSON/parse failure → deterministic fallback; "checking…" indicator; input disabled while grading
   - [ ] Browser test: free-text/paraphrased answers graded correctly by the model
-- [ ] **MVP 10 — Remediation loop.** Detect misconception → gentle correction → hint/example
+- [x] **MVP 10 — Remediation loop.** Detect misconception → gentle correction → hint/example
   → retry. Mistake counts stored; repeated mistakes slow the explanation.
+  - [x] Per-chunk `chunkAttempts` counter (resets on chunk start)
+  - [x] 1st slip → GIVE_HINT (specific/generic); 2nd+ slip → REMEDIATE state (now used)
+  - [x] REMEDIATE: gentle correction + re-teach the concept (AI re-explains) + re-ask
+  - [x] Mastery/mistakes tracked; attempts shown in debug; tsc clean
 
 ## Phase 4 — Questions & retrieval
 

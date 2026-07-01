@@ -157,12 +157,22 @@ export default function LessonPlayer({
     dispatch({ type: "RESET" });
   }
 
-  const lessonId = course.modules[state.moduleIndex].lessons[state.lessonIndex].lessonId;
+  const mod = course.modules[state.moduleIndex];
+  const lesson = mod.lessons[state.lessonIndex];
+  const lessonId = lesson.lessonId;
   const mastery = state.mastery[lessonId] ?? 0;
   const mistakes = state.mistakes[lessonId] ?? 0;
 
   return (
     <div className={styles.chat}>
+      <header className={styles.lessonHeader}>
+        <p className={styles.crumb}>
+          {course.programId.toUpperCase()} · {mod.title} · lesson {state.lessonIndex + 1} of{" "}
+          {mod.lessons.length}
+        </p>
+        <h1 className={styles.lessonTitle}>{lesson.title}</h1>
+      </header>
+
       <div className={styles.debugBar}>
         <div className={styles.debugRow}>
           <button className={styles.startOver} type="button" onClick={startOver}>

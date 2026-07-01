@@ -187,6 +187,7 @@ function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
   if (s.lessonIndex + 1 < mod.lessons.length) {
     s = { ...s, lessonIndex: s.lessonIndex + 1, chunkIndex: 0 };
     s = tx(s, "INTRODUCE_LESSON");
+    s = emitTutor(s, `That lesson's done — nice! Next up: ${currentLesson(course, s).title}.`);
     return presentChunk(s, course);
   }
 
@@ -195,14 +196,13 @@ function advance(s: TutorRuntimeState, course: CoursePack): TutorRuntimeState {
     s = { ...s, moduleIndex: s.moduleIndex + 1, lessonIndex: 0, chunkIndex: 0 };
     s = tx(s, "INTRODUCE_MODULE");
     s = tx(s, "INTRODUCE_LESSON");
+    const m = course.modules[s.moduleIndex];
+    s = emitTutor(s, `New module: ${m.title}. Next up: ${currentLesson(course, s).title}.`);
     return presentChunk(s, course);
   }
 
   s = tx(s, "END_PROGRAM");
-  s = emitTutor(
-    s,
-    "Nice work — you wrote and reasoned about your first Python program. That's the end of this lesson. 🎉",
-  );
+  s = emitTutor(s, "🎉 That's the end of this course — great work!");
   return { ...s, finished: true };
 }
 

@@ -11,13 +11,11 @@ export default function CourseApp({ courses }: { courses: CoursePack[] }) {
   const speaker = useSpeaker();
   const [programId, setProgramId] = useState(courses[0].programId);
   const course = courses.find((c) => c.programId === programId) ?? courses[0];
-  const module = course.modules[0];
-  const lesson = module.lessons[0];
 
   return (
     <>
-      <header className={styles.header}>
-        {courses.length > 1 && (
+      {courses.length > 1 && (
+        <div className={styles.switcherRow}>
           <select
             className={styles.switcher}
             value={programId}
@@ -30,12 +28,8 @@ export default function CourseApp({ courses }: { courses: CoursePack[] }) {
               </option>
             ))}
           </select>
-        )}
-        <p className={styles.course}>
-          {course.programId.toUpperCase()} · {module.title}
-        </p>
-        <h1 className={styles.concept}>{lesson.title}</h1>
-      </header>
+        </div>
+      )}
 
       {/* AI-first: the lesson only runs once the local model is ready. */}
       {speaker.ready ? (

@@ -157,6 +157,159 @@
               "remediation": "Point out the exact spelling: lowercase print."
             }
           ]
+        },
+        {
+          "lesson_id": "unlocking_print_power_ups",
+          "title": "Unlocking print() power-ups",
+          "type": "standard",
+          "order": 2,
+          "prerequisites": ["writing_your_first_program"],
+          "learning_goal": "Use print() to show multiple items on one line and to make blank lines.",
+          "lesson_chunks": [
+            {
+              "chunk_id": "print_multiple",
+              "goal": "Show that commas let print() display several items.",
+              "approved_explanation": "You can give print() more than one thing to show at once by separating them with commas. It displays them on the same line, in order.",
+              "simple_example": "print(\"Hi\", \"there\")   shows:   Hi there",
+              "check_question": "How do you separate several items inside one print() so it shows them all?",
+              "expected_answer": "commas",
+              "accepted_answers": ["comma", "commas", "with commas", "a comma"],
+              "common_wrong_answers": [
+                { "answers": ["space", "spaces", "plus", "and"], "hint": "Inside print(), you separate multiple items with commas." }
+              ],
+              "correct_feedback": "Yes — commas let one print() show several items.",
+              "hint": "It's the punctuation mark you also use to separate items in a list.",
+              "source_refs": ["PY101 Week 1, Unlocking print() power-ups"]
+            },
+            {
+              "chunk_id": "print_auto_space",
+              "goal": "Explain the automatic single space between comma-separated items.",
+              "approved_explanation": "When you separate items with commas, print() automatically puts one space between them. You do not need to add those spaces yourself.",
+              "simple_example": "print(\"a\", \"b\")   shows:   a b",
+              "check_question": "With commas, how many spaces does print() put between the items — zero, one, or two?",
+              "expected_answer": "one",
+              "accepted_answers": ["one", "1", "a single", "single", "one space"],
+              "common_wrong_answers": [
+                { "answers": ["zero", "0", "none", "two", "2"], "hint": "Commas add exactly one space automatically between items." }
+              ],
+              "correct_feedback": "Right — commas add exactly one space.",
+              "hint": "It adds just a single space between each item.",
+              "source_refs": ["PY101 Week 1, Unlocking print() power-ups"]
+            },
+            {
+              "chunk_id": "print_blank_line",
+              "goal": "Show that an empty print() makes a blank line.",
+              "approved_explanation": "Calling print() with nothing inside the parentheses prints an empty line. It is a simple way to add space between other lines of output.",
+              "simple_example": "print()   shows:   (a blank line)",
+              "check_question": "What does an empty print() — with nothing inside — display?",
+              "expected_answer": "a blank line",
+              "accepted_answers": ["blank line", "a blank line", "empty line", "an empty line", "blank", "empty", "nothing"],
+              "correct_feedback": "Exactly — empty print() prints a blank line.",
+              "hint": "With nothing to show, it just leaves an empty line.",
+              "source_refs": ["PY101 Week 1, Unlocking print() power-ups"]
+            },
+            {
+              "chunk_id": "print_powerups_recap",
+              "goal": "Combine multi-item printing into one line of code.",
+              "approved_explanation": "Putting it together: separate items with commas to show them on one line, and use an empty print() for a blank line. These small tricks shape your output.",
+              "check_question": "Write one print() that shows the two words:  good morning",
+              "expected_answer": "print(\"good\", \"morning\")",
+              "accepted_answers": ["print(\"good\", \"morning\")", "print good morning", "print(\"good morning\")"],
+              "correct_feedback": "🎉 Nice — that prints good morning.",
+              "hint": "Use print() with the two words in quotes, separated by a comma.",
+              "source_refs": ["PY101 Week 1, Unlocking print() power-ups"]
+            }
+          ],
+          "quiz_items": [],
+          "common_mistakes": [
+            {
+              "mistake_id": "manual_spaces",
+              "description": "Student adds spaces manually instead of relying on commas.",
+              "remediation": "Note that commas already add one space between items."
+            }
+          ]
+        },
+        {
+          "lesson_id": "introduction_to_variables",
+          "title": "Introduction to variables",
+          "type": "standard",
+          "order": 3,
+          "prerequisites": ["writing_your_first_program"],
+          "learning_goal": "Store a value in a variable and use it by name.",
+          "lesson_chunks": [
+            {
+              "chunk_id": "what_is_variable",
+              "goal": "Introduce a variable as a named store, created with =.",
+              "approved_explanation": "A variable is a name that stores a value so you can use it later. You create one with an equals sign: the name on the left, the value on the right. For example, age = 10 stores the number 10 in a name called age.",
+              "simple_example": "age = 10",
+              "check_question": "In  age = 10 , what goes on the LEFT of the equals sign — the name or the value?",
+              "expected_answer": "the name",
+              "accepted_answers": ["name", "the name", "variable name", "the variable name"],
+              "common_wrong_answers": [
+                { "answers": ["value", "the value", "number", "10"], "hint": "The name goes on the left, the value on the right: name = value." }
+              ],
+              "correct_feedback": "Right — the name goes on the left of the equals sign.",
+              "hint": "You name the box first, then put a value in it: name = value.",
+              "source_refs": ["PY101 Week 1, Introduction to variables"]
+            },
+            {
+              "chunk_id": "use_variable",
+              "goal": "Use a variable by writing its name.",
+              "approved_explanation": "Once a variable holds a value, you use it by writing its name. Writing the name gives you back what is stored. For example, after age = 10, writing print(age) shows 10.",
+              "simple_example": "age = 10\nprint(age)   shows:   10",
+              "check_question": "After  age = 10 , what does print(age) show?",
+              "expected_answer": "10",
+              "accepted_answers": ["10"],
+              "common_wrong_answers": [
+                { "answers": ["age", "the word age"], "hint": "Without quotes, print(age) shows what's stored in age — the number 10." }
+              ],
+              "correct_feedback": "Yes — print(age) shows the stored value, 10.",
+              "hint": "It shows the value stored in age, not the word 'age'.",
+              "source_refs": ["PY101 Week 1, Introduction to variables"]
+            },
+            {
+              "chunk_id": "name_vs_text",
+              "goal": "Distinguish a variable name (no quotes) from text (quotes).",
+              "approved_explanation": "Quotes matter. print(age) shows the value stored in the variable age, but print(\"age\") shows the word age as plain text. No quotes means the variable's value; quotes mean the literal text.",
+              "simple_example": "age = 10\nprint(age)     shows:   10\nprint(\"age\")   shows:   age",
+              "check_question": "Does print(\"age\") show the stored value, or the word age? (value / word)",
+              "expected_answer": "word",
+              "accepted_answers": ["word", "the word", "the word age", "word age", "text", "the text"],
+              "common_wrong_answers": [
+                { "answers": ["value", "the value", "10", "stored value"], "hint": "With quotes it's literal text — so it shows the word age, not the stored value." }
+              ],
+              "correct_feedback": "Correct — quotes mean literal text, so it shows the word age.",
+              "hint": "Quotes always mean 'the literal text', not the variable's value.",
+              "source_refs": ["PY101 Week 1, Introduction to variables"]
+            },
+            {
+              "chunk_id": "variables_recap",
+              "goal": "Write a variable assignment.",
+              "approved_explanation": "So: store a value with the equals sign (name on the left), use it by writing its name without quotes, and remember quotes always mean literal text. Variables let your program remember and reuse information.",
+              "check_question": "Write code that stores the number 5 in a variable called count.",
+              "expected_answer": "count = 5",
+              "accepted_answers": ["count = 5", "count=5", "count 5"],
+              "common_wrong_answers": [
+                { "answers": ["5 = count", "5=count"], "hint": "The name goes on the LEFT of the equals sign: count = 5." }
+              ],
+              "correct_feedback": "🎉 That stores 5 in count.",
+              "hint": "Put the name first, then =, then the value: name = value.",
+              "source_refs": ["PY101 Week 1, Introduction to variables"]
+            }
+          ],
+          "quiz_items": [],
+          "common_mistakes": [
+            {
+              "mistake_id": "reversed_assignment",
+              "description": "Student writes value = name instead of name = value.",
+              "remediation": "The variable name goes on the left of the equals sign."
+            },
+            {
+              "mistake_id": "quotes_on_variable",
+              "description": "Student quotes a variable name and prints the word instead of the value.",
+              "remediation": "No quotes to use the variable's value; quotes mean literal text."
+            }
+          ]
         }
       ]
     }

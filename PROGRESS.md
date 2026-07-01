@@ -16,8 +16,9 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 15 built (build-time embeddings + hybrid retrieval; keyword fallback).
-`npm run eval`: 29 checks passing. Next: MVP 16 — progress & review mode.
+**Current focus:** MVP 16 partial — multi-lesson experience added (PY101 Week 1 now has 3
+lessons; dynamic header; lesson transitions). Review mode intentionally deferred (user).
+`npm run eval`: 29 checks passing (flow now traverses all 3 lessons).
 
 **Ops note:** after editing course content, re-run `npm run embed-courses` to refresh
 `public/embeddings/<programId>.json` (the eval's coverage check flags stale/missing vectors).
@@ -145,9 +146,14 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
   - [x] Fallback to keyword-only if embed model or vectors unavailable; QA uses hybrid
   - [x] transformers.js stays a lazy client chunk (build clean, main bundle unchanged); tsc clean
   - [x] Evals: cosine math, keyword fallback, embeddings-coverage guard (29 checks total)
-- [ ] **MVP 16 — Progress & review mode.** Module/lesson map, mastery scores, weak-topic
-  review, resume from last session, session summary. Implements the Maestro `review` /
-  `weekly_review` / `exam` / `retake_review` lesson types as first-class assessment/gating.
+- [~] **MVP 16 — Multi-lesson experience (review deferred).** Multiple lessons per module,
+  smooth progression, dynamic header. (Review/weak-topic mode intentionally deferred per user.)
+  - [x] Authored 2 more PY101 lessons (print power-ups, variables) → 3-lesson Week 1 (16 chunks)
+  - [x] Engine already advances lesson→lesson; added transition messages ("Next up: …")
+  - [x] Dynamic lesson header in `LessonPlayer` (module · lesson N of M · title); `CourseApp` = switcher
+  - [x] Generic course-completion message; re-embedded; eval flow traverses all 3 lessons (29 pass)
+  - [ ] Progress map / mastery display / session summary (part of MVP 16, not done)
+  - [ ] Review mode: weakest lesson → diagnostic → remediate → retry (deferred)
 
 ## Phase 6 — Authoring, server, hardening
 

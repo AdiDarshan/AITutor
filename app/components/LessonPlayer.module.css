@@ -5,6 +5,26 @@
   min-height: 0;
 }
 
+.lessonHeader {
+  flex: 0 0 auto;
+  margin: 12px 0 12px;
+}
+
+.crumb {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.lessonTitle {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
 .debugBar {
   flex: 0 0 auto;
   margin-bottom: 8px;

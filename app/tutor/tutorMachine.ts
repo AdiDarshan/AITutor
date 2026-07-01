@@ -28,6 +28,10 @@ export interface TutorRuntimeState {
   pendingAnswer: string | null;
   /** Wrong/partial attempts on the current chunk (resets when a chunk starts). */
   chunkAttempts: number;
+  /** True while answering a student question (async LLM call in flight). */
+  answeringQuestion: boolean;
+  /** The question awaiting an answer. */
+  pendingQuestion: string | null;
   finished: boolean;
   /** Mastery score (0..1) per lessonId. */
   mastery: Record<string, number>;
@@ -40,6 +44,7 @@ export interface TutorRuntimeState {
 export type TutorAction =
   | StudentEvent
   | { type: "APPLY_GRADE"; modelGrade: GradeResult | null }
+  | { type: "ANSWER_QUESTION"; text: string }
   | { type: "RESTORE"; saved: SavedProgress }
   | { type: "RESET" };
 
@@ -128,6 +133,8 @@ function freshState(
     grading: false,
     pendingAnswer: null,
     chunkAttempts: 0,
+    answeringQuestion: false,
+    pendingQuestion: null,
     finished: false,
     mastery,
     mistakes,
@@ -236,12 +243,19 @@ function reduce(
     }
 
     case "ASK_QUESTION": {
-      if (!s.awaitingAnswer || s.finished) return s;
-      let st = emitStudent(s, action.text);
-      return emitTutor(
-        st,
-        "I'll be able to answer questions from the course material in a later step. For now, let's keep going — try the check question above.",
-      );
+      if (!s.awaitingAnswer || s.finished || s.grading || s.answeringQuestion) return s;
+      // Interrupt: record the question and let the component answer it from the
+      // current chunk. The teaching state machine is untouched (we return to it).
+      const st = emitStudent(s, action.text);
+      return { ...st, answeringQuestion: true, pendingQuestion: action.text };
+    }
+
+    case "ANSWER_QUESTION": {
+      if (!s.answeringQuestion) return s;
+      let st = emitTutor(s, action.text);
+      // Return to exactly where we were in the lesson.
+      st = emitTutor(st, `Back to where we were — ${currentChunk(course, s).checkQuestion}`);
+      return { ...st, answeringQuestion: false, pendingQuestion: null };
     }
 
     case "SUBMIT_ANSWER": {

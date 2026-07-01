@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 10 built (remediation loop: hint → re-teach on repeated slips). Next:
-MVP 11 — question interrupt mode (answer from the current chunk, return to the lesson).
+**Current focus:** MVP 11 built (question interrupt: answer from current chunk, return to lesson).
+Next: MVP 12 — simple retrieval (answer from any course chunk, with source labels).
 
 ---
 
@@ -105,8 +105,12 @@ MVP 11 — question interrupt mode (answer from the current chunk, return to the
 
 ## Phase 4 — Questions & retrieval
 
-- [ ] **MVP 11 — Question interrupt (no retrieval).** Save state → answer from current chunk
+- [x] **MVP 11 — Question interrupt (no retrieval).** Save state → answer from current chunk
   only → return to exact prior state; refuse safely if out of chunk scope.
+  - [x] `questionAnswerPrompt` (answer from current chunk only, refuse if not covered)
+  - [x] `useSpeaker.answerQuestion`; reducer ASK_QUESTION → answeringQuestion → ANSWER_QUESTION
+  - [x] Teaching state machine untouched (interrupt); re-posts the check question on return
+  - [x] "thinking…" indicator; input disabled while answering; tsc clean
 - [ ] **MVP 12 — Simple retrieval.** Source chunks + keyword search (top 3); answers include
   source label; graceful "not enough course material" fallback.
 - [ ] **MVP 13 — Verifier pass.** Post-speaker verifier (JSON); fail once → regenerate shorter,

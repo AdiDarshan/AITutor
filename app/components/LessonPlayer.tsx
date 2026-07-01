@@ -97,6 +97,29 @@ export default function LessonPlayer({
       });
   }, [state.grading, state.pendingAnswer, state.moduleIndex, state.lessonIndex, state.chunkIndex, course, speaker]);
 
+  // Answer a paused-lesson question from the current chunk, then return.
+  const answeringRef = useRef(false);
+  useEffect(() => {
+    if (!state.answeringQuestion || state.pendingQuestion == null || answeringRef.current)
+      return;
+    answeringRef.current = true;
+    const chunk =
+      course.modules[state.moduleIndex].lessons[state.lessonIndex].chunks[state.chunkIndex];
+    const fallback =
+      "I don't have enough course material to answer that yet — let's keep going.";
+    speaker
+      .answerQuestion({
+        explanation: chunk.explanation,
+        example: chunk.example,
+        question: state.pendingQuestion,
+      })
+      .then((ans) => dispatch({ type: "ANSWER_QUESTION", text: ans ?? fallback }))
+      .catch(() => dispatch({ type: "ANSWER_QUESTION", text: fallback }))
+      .finally(() => {
+        answeringRef.current = false;
+      });
+  }, [state.answeringQuestion, state.pendingQuestion, state.moduleIndex, state.lessonIndex, state.chunkIndex, course, speaker]);
+
   // What to show for a tutor message's text (single bubble, no duplicates).
   function tutorText(id: string, speakable: boolean | undefined, approved: string): string | null {
     if (!speakable) return approved;
@@ -170,13 +193,18 @@ export default function LessonPlayer({
         {state.grading && (
           <div className={styles.grading}>✨ checking your answer…</div>
         )}
+        {state.answeringQuestion && (
+          <div className={styles.grading}>✨ thinking…</div>
+        )}
       </div>
 
       <QuickActions
         onEvent={send}
         onToggleAsk={() => setAskMode((v) => !v)}
         askMode={askMode}
-        disabled={state.finished || !state.awaitingAnswer || state.grading}
+        disabled={
+          state.finished || !state.awaitingAnswer || state.grading || state.answeringQuestion
+        }
       />
 
       <Composer
@@ -188,15 +216,17 @@ export default function LessonPlayer({
             send({ type: "SUBMIT_ANSWER", text });
           }
         }}
-        disabled={state.finished || state.grading}
+        disabled={state.finished || state.grading || state.answeringQuestion}
         placeholder={
           state.finished
             ? "Lesson complete 🎉"
             : state.grading
               ? "Checking…"
-              : askMode
-                ? "Type your question…"
-                : "Type your answer…"
+              : state.answeringQuestion
+                ? "Thinking…"
+                : askMode
+                  ? "Type your question…"
+                  : "Type your answer…"
         }
       />
     </div>

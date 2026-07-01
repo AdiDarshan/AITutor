@@ -5,6 +5,7 @@ import type { LLMClient, ModelStatus } from "./LLMClient";
 import { speakerPrompt } from "./prompts/speakerPrompt";
 import { groundOrNull } from "./grounding";
 import { gradingPrompt, parseGrade, type GradeInput, type GradeResult } from "./grade";
+import { questionAnswerPrompt, type QuestionInput } from "./prompts/questionAnswerPrompt";
 import { getWebLLMClient } from "./WebLLMClient";
 
 export interface Speaker {
@@ -21,6 +22,8 @@ export interface Speaker {
   rephrase: (approved: string) => Promise<string | null>;
   /** Grade a student answer; null if the model isn't ready or returns junk. */
   grade: (input: GradeInput) => Promise<GradeResult | null>;
+  /** Answer a question from the current chunk; null if not ready or fails. */
+  answerQuestion: (input: QuestionInput) => Promise<string | null>;
 }
 
 export function useSpeaker(): Speaker {
@@ -89,6 +92,23 @@ export function useSpeaker(): Speaker {
     }
   }, []);
 
+  const answerQuestion = useCallback(
+    async (input: QuestionInput): Promise<string | null> => {
+      const client = clientRef.current;
+      if (!client || client.status() !== "ready") return null;
+      try {
+        const out = await client.generate(questionAnswerPrompt(input), {
+          maxTokens: 220,
+          temperature: 0.3,
+        });
+        return out.trim() || null;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
   return {
     status,
     supported,
@@ -98,5 +118,6 @@ export function useSpeaker(): Speaker {
     retry,
     rephrase,
     grade,
+    answerQuestion,
   };
 }

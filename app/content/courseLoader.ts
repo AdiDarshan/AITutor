@@ -44,6 +44,7 @@ function mapCoursePack(raw: unknown): CoursePack {
           checkQuestion: c.check_question,
           expectedAnswer: c.expected_answer,
           accepted: c.accepted_answers ?? [c.expected_answer],
+          commonWrongAnswers: c.common_wrong_answers ?? [],
           correctFeedback: c.correct_feedback ?? "Correct.",
           hint: c.hint ?? "Not quite — try again.",
         })),

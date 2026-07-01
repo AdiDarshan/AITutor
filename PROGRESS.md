@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 7 built (model status states + Mode A/B fallback toggle). Next: MVP 8 —
-quiz bank + deterministic grading. Three courses now load via the switcher.
+**Current focus:** MVP 8 done (deterministic known-wrong-answer hints). Next: MVP 9 — LLM quiz
+grading (the primary grader for free-text; deterministic stays as the fallback floor).
 
 ---
 
@@ -83,8 +83,12 @@ quiz bank + deterministic grading. Three courses now load via the switcher.
 
 ## Phase 3 — Quizzing, grading, remediation
 
-- [ ] **MVP 8 — Quiz bank + deterministic grading.** Approved quiz items; string-match
-  grading: correct advances, known-wrong → specific hint, unknown → generic clarify.
+- [x] **MVP 8 — Deterministic grading + known-wrong hints.** correct advances, known-wrong →
+  specific hint, unknown → generic. (Folded into chunk check-questions, not a separate quiz bank.)
+  - [x] Schema/types/loader: `common_wrong_answers` (answers[] → targeted hint) per chunk
+  - [x] `matchWrongHint` in reducer; specific hint on known-wrong, else generic `chunk.hint`
+  - [x] Added misconception hints across all 3 courses (print command, quotes visible, wave
+        length, blue scatters most, float/sink, ice density); tsc clean
 - [ ] **MVP 9 — LLM quiz grading.** JSON-only grading prompt against rubric; app enforces
   `canAdvance = correct && confidence >= 0.7`; falls back to deterministic on JSON failure.
 - [ ] **MVP 10 — Remediation loop.** Detect misconception → gentle correction → hint/example

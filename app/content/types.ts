@@ -9,6 +9,11 @@ export type LessonType =
   | "exam"
   | "retake_review";
 
+export interface CommonWrongAnswer {
+  answers: string[];
+  hint: string;
+}
+
 export interface LessonChunk {
   chunkId: string;
   explanation: string;
@@ -17,6 +22,8 @@ export interface LessonChunk {
   expectedAnswer: string;
   /** Accepted answers for deterministic matching (defaults to [expectedAnswer]). */
   accepted: string[];
+  /** Known wrong answers, each with a targeted hint. */
+  commonWrongAnswers: CommonWrongAnswer[];
   correctFeedback: string;
   hint: string;
 }

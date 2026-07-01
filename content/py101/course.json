@@ -53,6 +53,12 @@
               "check_question": "Which command tells the computer to show text on the screen?",
               "expected_answer": "print",
               "accepted_answers": ["print"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["echo", "say", "cout", "printf", "console.log", "console log", "write", "output", "display"],
+                  "hint": "Good instinct, but in Python the command is simply called print."
+                }
+              ],
               "correct_feedback": "Yes — print() is the command that shows things on the screen.",
               "hint": "It's the word you write just before the parentheses: ____( ).",
               "source_refs": ["PY101 Week 1, Writing your first program"]
@@ -77,6 +83,12 @@
               "check_question": "Do the quotation marks appear on the screen when the program runs? (yes / no)",
               "expected_answer": "no",
               "accepted_answers": ["no", "nope"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["yes", "yep", "yeah"],
+                  "hint": "Actually no — look at the example: print(\"Python\") shows Python with no quotes. The quotes are only markers."
+                }
+              ],
               "correct_feedback": "Correct — the quotes are just markers and are never shown.",
               "hint": "Look at the example: the quotes are gone in what gets shown.",
               "source_refs": ["PY101 Week 1, Writing your first program"]

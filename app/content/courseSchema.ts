@@ -12,6 +12,12 @@ export const lessonTypeSchema = z.enum([
   "retake_review",
 ]);
 
+// A known wrong answer and the specific hint to show for it.
+export const commonWrongAnswerSchema = z.object({
+  answers: z.array(z.string()).min(1),
+  hint: z.string(),
+});
+
 export const lessonChunkSchema = z.object({
   chunk_id: z.string(),
   goal: z.string().optional(),
@@ -20,6 +26,7 @@ export const lessonChunkSchema = z.object({
   check_question: z.string().min(1),
   expected_answer: z.string().min(1),
   accepted_answers: z.array(z.string()).optional(),
+  common_wrong_answers: z.array(commonWrongAnswerSchema).optional(),
   correct_feedback: z.string().optional(),
   hint: z.string().optional(),
   source_refs: z.array(z.string()).optional(),

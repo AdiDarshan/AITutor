@@ -41,6 +41,12 @@
               "check_question": "Does blue light travel in shorter waves or longer waves than red light?",
               "expected_answer": "shorter",
               "accepted_answers": ["shorter", "short", "shorter waves"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["longer", "long", "longer waves"],
+                  "hint": "It's the other way around: blue has the shorter waves, and red has the longer ones."
+                }
+              ],
               "correct_feedback": "Yes — blue light has shorter waves than red light.",
               "hint": "Blue sits at the short-wave end; red is at the long-wave end.",
               "source_refs": ["Everyday Science: Light and the sky"]
@@ -63,6 +69,12 @@
               "check_question": "Which color does the air scatter the most — blue or red?",
               "expected_answer": "blue",
               "accepted_answers": ["blue"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["red", "orange"],
+                  "hint": "Not red — red has long waves, which scatter the least. It's the short-waved color that scatters most."
+                }
+              ],
               "correct_feedback": "Right — short-waved blue light is scattered the most.",
               "hint": "It is the color with the shortest waves.",
               "source_refs": ["Everyday Science: Light and the sky"]

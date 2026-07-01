@@ -45,6 +45,16 @@ function isCorrect(accepted: string[], raw: string): boolean {
   return accepted.some((a) => normalize(a) === got);
 }
 
+/** Deterministic grading: a targeted hint if the wrong answer is a known one, else null. */
+function matchWrongHint(
+  wrongs: { answers: string[]; hint: string }[],
+  raw: string,
+): string | null {
+  const got = normalize(raw);
+  const hit = wrongs.find((w) => w.answers.some((a) => normalize(a) === got));
+  return hit ? hit.hint : null;
+}
+
 function currentLesson(course: CoursePack, s: TutorRuntimeState) {
   return course.modules[s.moduleIndex].lessons[s.lessonIndex];
 }
@@ -255,7 +265,9 @@ function reduce(
         mistakes: { ...st.mistakes, [lessonId]: (st.mistakes[lessonId] ?? 0) + 1 },
       };
       st = tx(st, "GIVE_HINT");
-      st = emitTutor(st, chunk.hint);
+      // Targeted hint for a known wrong answer, else the generic chunk hint.
+      const specific = matchWrongHint(chunk.commonWrongAnswers, action.text);
+      st = emitTutor(st, specific ?? chunk.hint);
       st = tx(st, "ASK_MICRO_QUIZ");
       return { ...st, awaitingAnswer: true };
     }

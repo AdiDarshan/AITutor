@@ -30,6 +30,12 @@
               "check_question": "Something that is LESS dense than water — does it sink or float?",
               "expected_answer": "float",
               "accepted_answers": ["float", "floats", "it floats"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["sink", "sinks", "it sinks"],
+                  "hint": "The other way around: less dense than the liquid means it rises up and floats."
+                }
+              ],
               "correct_feedback": "Right — less dense than the liquid means it floats.",
               "hint": "Less dense than the liquid rises to the top.",
               "source_refs": ["Everyday Science: Water and ice"]
@@ -63,6 +69,12 @@
               "check_question": "Is ice more dense or less dense than liquid water?",
               "expected_answer": "less dense",
               "accepted_answers": ["less dense", "less", "lower", "less density"],
+              "common_wrong_answers": [
+                {
+                  "answers": ["more dense", "more", "higher", "denser"],
+                  "hint": "Actually less dense — the molecules are farther apart, so the same water takes up more space as ice."
+                }
+              ],
               "correct_feedback": "Right — same material, more space, so ice is less dense.",
               "hint": "More space for the same stuff means a lower density.",
               "source_refs": ["Everyday Science: Water and ice"]

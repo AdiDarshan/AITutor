@@ -14,3 +14,14 @@ Rules:
 LESSON MATERIAL:
 ${approvedExplanation}`;
 }
+
+// Used to regenerate after the verifier rejects a draft.
+export function speakerRetryPrompt(approvedExplanation: string, reason: string | null): string {
+  return `You are a warm, encouraging tutor teaching a complete beginner. Your previous explanation had a problem: ${reason ?? "it was unclear or too long"}.
+
+Rewrite it: teach the LESSON MATERIAL below simply and clearly, keep it short (a
+few sentences), do NOT ask any question, and output plain text only.
+
+LESSON MATERIAL:
+${approvedExplanation}`;
+}

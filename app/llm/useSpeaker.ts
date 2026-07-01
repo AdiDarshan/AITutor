@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LLMClient, ModelStatus } from "./LLMClient";
-import { speakerPrompt } from "./prompts/speakerPrompt";
-import { groundOrNull } from "./grounding";
+import { speakerPrompt, speakerRetryPrompt } from "./prompts/speakerPrompt";
+import { cleanOutput } from "./grounding";
+import { verifierPrompt, parseVerdict } from "./verify";
 import { gradingPrompt, parseGrade, type GradeInput, type GradeResult } from "./grade";
 import { questionAnswerPrompt, type QuestionInput } from "./prompts/questionAnswerPrompt";
 import { getWebLLMClient } from "./WebLLMClient";
@@ -66,13 +67,40 @@ export function useSpeaker(): Speaker {
   const rephrase = useCallback(async (approved: string): Promise<string | null> => {
     const client = clientRef.current;
     if (!client || client.status() !== "ready") return null;
+
+    const verify = async (draft: string) =>
+      parseVerdict(
+        await client.generate(verifierPrompt(approved, draft), {
+          maxTokens: 120,
+          temperature: 0,
+          label: "verify",
+        }),
+      );
+
     try {
-      const out = await client.generate(speakerPrompt(approved), {
-        maxTokens: 200,
-        temperature: 0.3,
-        label: "speaker",
-      });
-      return groundOrNull(approved, out);
+      // Generate → verify. Fail once → regenerate shorter → verify.
+      // Fail twice → return null (caller falls back to the approved text).
+      let draft = cleanOutput(
+        await client.generate(speakerPrompt(approved), {
+          maxTokens: 200,
+          temperature: 0.3,
+          label: "speaker",
+        }),
+      );
+      if (!draft) return null;
+      let verdict = await verify(draft);
+      if (verdict.okay) return draft;
+
+      draft = cleanOutput(
+        await client.generate(speakerRetryPrompt(approved, verdict.reason), {
+          maxTokens: 180,
+          temperature: 0.3,
+          label: "speaker-retry",
+        }),
+      );
+      if (!draft) return null;
+      verdict = await verify(draft);
+      return verdict.okay ? draft : null;
     } catch {
       return null;
     }

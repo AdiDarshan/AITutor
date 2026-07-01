@@ -16,8 +16,8 @@ failures still fall back to the approved text (resilience, not a user-facing mod
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
-**Current focus:** MVP 12 built (keyword retrieval over all course chunks; answers cite sources;
-refuse if no match). Next: MVP 13 — verifier pass (regenerate/fallback on ungrounded output).
+**Current focus:** MVP 13 built (verifier on the speaker: quality/safety only, regenerate once,
+else fallback to approved text). Next: MVP 14 — eval runner (JSON test cases, pass/fail).
 
 ---
 
@@ -117,8 +117,14 @@ refuse if no match). Next: MVP 13 — verifier pass (regenerate/fallback on ungr
   - [x] QA now retrieves across the course, answers from retrieved material with `[Source:]` labels
   - [x] `SourceBadge` renders source labels; empty match → refuse without a model call
   - [x] No match handled; message `sources` field; tsc clean
-- [ ] **MVP 13 — Verifier pass.** Post-speaker verifier (JSON); fail once → regenerate shorter,
+- [x] **MVP 13 — Verifier pass.** Post-speaker verifier (JSON); fail once → regenerate shorter,
   fail twice → safe fallback. No infinite regen loops.
+  - [x] `app/llm/verify.ts`: verifierPrompt + parseVerdict (quality/safety only, fails open)
+  - [x] Checks wrong_or_misleading / too_long / too_many_questions; ALLOWS added explanation
+        (per user: keep teaching freedom — no grounding rejection)
+  - [x] rephrase(): generate → verify → regenerate once → verify → else fallback to approved
+  - [x] `speakerRetryPrompt`; grounding.ts simplified to `cleanOutput`; applied to speaker only
+        (QA already retrieval-grounded); tsc clean
 
 ## Phase 5 — Evaluation & quality
 
